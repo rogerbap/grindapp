@@ -1,9 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { WORKOUTS, PHASE_COLORS, DAY_ORDER, JS_TO_DAY, PHASE_INFO, TEMPO } from "./workouts.js";
+import { useState, useEffect, useRef } from "react";
+import { WORKOUTS, PHASE_COLORS, DAY_ORDER, JS_TO_DAY, PHASE_INFO, TEMPO, SWAPS } from "./workouts.js";
 
 function getTodayId() { return JS_TO_DAY[new Date().getDay()]; }
 function formatDate(d) { return d.toISOString().split("T")[0]; }
 function fmtDur(secs) { const m = Math.floor(secs/60), s = secs%60; return `${m}:${s.toString().padStart(2,"0")}`; }
+function today() { return formatDate(new Date()); }
+
+const LS = {
+  get: (k) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del: (k) => { try { localStorage.removeItem(k); } catch {} },
+};
 
 const S = {
   app: { display:"flex", flexDirection:"column", height:"100dvh", maxWidth:"430px", margin:"0 auto", background:"#080808", color:"#f0f0f0", fontFamily:"'Barlow Condensed',sans-serif", overflow:"hidden", position:"relative" },
@@ -16,7 +23,13 @@ const S = {
   tag: (bg,c) => ({ fontSize:"9px", fontWeight:700, padding:"3px 7px", borderRadius:"4px", background:bg, color:c, letterSpacing:"1px", flexShrink:0 }),
   btn: (c,o) => ({ padding:"14px", borderRadius:"10px", border: o?`1px solid ${c}`:"none", background: o?"transparent":c, color: o?c:"#000", fontSize:"14px", fontWeight:800, cursor:"pointer", width:"100%", fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"0.5px" }),
   inp: { background:"#1a1a1a", border:"1px solid #2a2a2a", borderRadius:"8px", color:"#fff", fontSize:"24px", fontWeight:700, textAlign:"center", padding:"12px 8px", width:"100%", outline:"none", fontFamily:"'Barlow Condensed',sans-serif" },
-  chip: (done, cur) => ({ width:"42px", height:"42px", borderRadius:"50%", border: done?"none": cur?"2px solid #e8a838":"1px solid #252525", background: done?"#112211": cur?"#1e1800":"#111", display:"flex", alignItems:"center", justifyContent:"center", cursor: done?"default":"pointer", flexShrink:0, flexDirection:"column", gap:"1px" }),
+  chip: (done, cur, editing) => ({
+    width:"42px", height:"42px", borderRadius:"50%",
+    border: editing ? "2px solid #e05c2a" : done ? "none" : cur ? "2px solid #e8a838" : "1px solid #252525",
+    background: editing ? "#1e0e00" : done ? "#112211" : cur ? "#1e1800" : "#111",
+    display:"flex", alignItems:"center", justifyContent:"center",
+    cursor:"pointer", flexShrink:0, flexDirection:"column", gap:"1px"
+  }),
 };
 
 export default function App() {
@@ -26,50 +39,66 @@ export default function App() {
   const [activeDay, setActiveDay] = useState(null);
   const [session, setSession] = useState(null);
   const [history, setHistory] = useState([]);
-  const [setInput, setSetInput] = useState(null);
+  const [setInput, setSetInput] = useState(null); // { exName, idx, isEdit }
   const [wt, setWt] = useState("");
   const [rp, setRp] = useState("");
   const [elapsed, setElapsed] = useState(0);
-  // Rest timer state
-  const [restTimer, setRestTimer] = useState(null); // { remaining, total, exName, nextSetIdx }
+  const [restTimer, setRestTimer] = useState(null);
+  // Notes: { [exName]: string } — persisted globally across sessions
+  const [notes, setNotes] = useState({});
+  // Note editor state
+  const [noteEditor, setNoteEditor] = useState(null); // { exName, value }
+  // Swap modal state
+  const [swapModal, setSwapModal] = useState(null); // { originalName, currentName }
   const sessionTimerRef = useRef(null);
   const restTimerRef = useRef(null);
   const todayId = getTodayId();
 
-  // Load from localStorage
+  // ── LOAD FROM STORAGE ──────────────────────────────────────────────────
   useEffect(() => {
-    try {
-      const s = localStorage.getItem("grind_settings");
-      if (s) { const d = JSON.parse(s); setPhase(d.phase||1); setWeek(d.week||1); }
-      const h = localStorage.getItem("grind_history");
-      if (h) setHistory(JSON.parse(h));
-    } catch {}
+    const s = LS.get("grind_settings");
+    if (s) { setPhase(s.phase||1); setWeek(s.week||1); }
+    const h = LS.get("grind_history");
+    if (h) setHistory(h);
+    const n = LS.get("grind_notes");
+    if (n) setNotes(n);
+    // Restore in-progress session
+    const saved = LS.get("grind_active_session");
+    if (saved) {
+      setSession(saved.session);
+      setElapsed(saved.elapsed||0);
+      setActiveDay(saved.session.dayId);
+      setTab("session");
+    }
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("grind_settings", JSON.stringify({ phase, week }));
-  }, [phase, week]);
+  useEffect(() => { LS.set("grind_settings", { phase, week }); }, [phase, week]);
 
-  // Session elapsed timer
+  // Auto-save session state on every change
+  useEffect(() => {
+    if (session) {
+      LS.set("grind_active_session", { session, elapsed });
+    }
+  }, [session, elapsed]);
+
+  // Session timer
   useEffect(() => {
     if (session) {
       sessionTimerRef.current = setInterval(() => setElapsed(e => e+1), 1000);
     } else {
       clearInterval(sessionTimerRef.current);
-      setElapsed(0);
     }
     return () => clearInterval(sessionTimerRef.current);
   }, [!!session]);
 
-  // Rest countdown timer
+  // Rest timer
   useEffect(() => {
     if (restTimer && restTimer.remaining > 0) {
       restTimerRef.current = setTimeout(() => {
         setRestTimer(prev => {
           if (!prev) return null;
           if (prev.remaining <= 1) {
-            // Timer done — vibrate and clear
-            try { navigator.vibrate([200, 100, 200, 100, 200]); } catch {}
+            try { navigator.vibrate([200,100,200,100,200]); } catch {}
             return null;
           }
           return { ...prev, remaining: prev.remaining - 1 };
@@ -79,10 +108,8 @@ export default function App() {
     return () => clearTimeout(restTimerRef.current);
   }, [restTimer]);
 
-  function saveHistory(h) {
-    setHistory(h);
-    try { localStorage.setItem("grind_history", JSON.stringify(h)); } catch {}
-  }
+  function saveHistory(h) { setHistory(h); LS.set("grind_history", h); }
+  function saveNotes(n) { setNotes(n); LS.set("grind_notes", n); }
 
   function startSession(dayId) {
     const w = WORKOUTS[dayId];
@@ -90,20 +117,15 @@ export default function App() {
     w.sections.forEach(sec => sec.exercises.forEach(ex => {
       sets[ex.name] = Array.from({ length: ex.sets }, () => ({ weight:"", reps:"", done:false }));
     }));
-    setSession({ dayId, sets });
+    const newSession = { dayId, sets };
+    setSession(newSession);
     setActiveDay(dayId);
     setRestTimer(null);
     setTab("session");
   }
 
-  function startRest(exName, nextSetIdx, restSecs) {
-    if (!restSecs || restSecs <= 0) return;
-    setRestTimer({ remaining: restSecs, total: restSecs, exName, nextSetIdx });
-  }
-
-  function logSet(exName, idx, weight, reps) {
+  function logSet(exName, idx, weight, reps, isEdit) {
     const w = WORKOUTS[session.dayId];
-    // Find rest time for this exercise
     let restSecs = 90;
     w.sections.forEach(sec => sec.exercises.forEach(ex => {
       if (ex.name === exName) restSecs = ex.rest || 90;
@@ -111,32 +133,117 @@ export default function App() {
     const exSets = session.sets[exName];
     const isLastSet = idx >= exSets.length - 1;
 
-    setSession(prev => ({
-      ...prev,
-      sets: { ...prev.sets, [exName]: prev.sets[exName].map((s,i) => i===idx ? { weight, reps, done:true } : s) }
-    }));
+    setSession(prev => {
+      const updated = {
+        ...prev,
+        sets: { ...prev.sets, [exName]: prev.sets[exName].map((s,i) => i===idx ? { weight, reps, done:true } : s) }
+      };
+      LS.set("grind_active_session", { session: updated, elapsed });
+      return updated;
+    });
     setSetInput(null); setWt(""); setRp("");
-
-    // Auto-start rest timer if not last set and rest > 0
-    if (!isLastSet && restSecs > 0) {
-      startRest(exName, idx + 1, restSecs);
+    // Only start rest timer on new logs, not edits
+    if (!isEdit && !isLastSet && restSecs > 0) {
+      setRestTimer({ remaining: restSecs, total: restSecs, exName, nextSetIdx: idx + 1 });
     }
   }
 
   function skipSet(exName, idx) {
-    setSession(prev => ({
-      ...prev,
-      sets: { ...prev.sets, [exName]: prev.sets[exName].map((s,i) => i===idx ? { ...s, done:true } : s) }
-    }));
-    setSetInput(null); setWt(""); setRp("");
-    setRestTimer(null);
+    setSession(prev => {
+      const updated = {
+        ...prev,
+        sets: { ...prev.sets, [exName]: prev.sets[exName].map((s,i) => i===idx ? { ...s, done:true } : s) }
+      };
+      LS.set("grind_active_session", { session: updated, elapsed });
+      return updated;
+    });
+    setSetInput(null); setWt(""); setRp(""); setRestTimer(null);
+  }
+
+  function openSetInput(exName, idx, isEdit) {
+    const set = session.sets[exName]?.[idx];
+    if (restTimer && !isEdit) setRestTimer(null);
+    setSetInput({ exName, idx, isEdit: !!isEdit });
+    setWt(set?.weight || "");
+    setRp(set?.reps || "");
   }
 
   function finishSession() {
-    const entry = { date: formatDate(new Date()), dayId: session.dayId, sets: session.sets, duration: elapsed, phase };
+    const entry = { date: today(), dayId: session.dayId, sets: session.sets, duration: elapsed, phase };
     const newH = [entry, ...history].slice(0, 120);
     saveHistory(newH);
-    setSession(null); setActiveDay(null); setRestTimer(null); setTab("today");
+    LS.del("grind_active_session");
+    setSession(null); setActiveDay(null); setRestTimer(null);
+    setElapsed(0); setTab("today");
+  }
+
+  function abandonSession() {
+    if (window.confirm("Abandon session? Progress won't be saved.")) {
+      LS.del("grind_active_session");
+      setSession(null); setActiveDay(null); setRestTimer(null);
+      setElapsed(0); setTab("today");
+    }
+  }
+
+  function saveNote(exName, value) {
+    const updated = { ...notes, [exName]: value };
+    saveNotes(updated);
+    setNoteEditor(null);
+  }
+
+  function applySwap(originalName, newEx) {
+    // Re-initialize sets for the new exercise, keep the swap mapping
+    setSession(prev => {
+      const newSets = { ...prev.sets };
+      // Remove old sets (both original and any previous swap)
+      const currentName = prev.swaps?.[originalName] || originalName;
+      delete newSets[currentName];
+      // Add new sets
+      newSets[newEx.name] = Array.from({ length: newEx.sets }, () => ({ weight:"", reps:"", done:false }));
+      const updated = {
+        ...prev,
+        sets: newSets,
+        swaps: { ...(prev.swaps||{}), [originalName]: newEx.name },
+        swapData: { ...(prev.swapData||{}), [originalName]: newEx },
+      };
+      LS.set("grind_active_session", { session: updated, elapsed });
+      return updated;
+    });
+    setSwapModal(null);
+    setSetInput(null);
+    setRestTimer(null);
+  }
+
+  function revertSwap(originalName) {
+    const origEx = (() => {
+      let found = null;
+      const w = WORKOUTS[session.dayId];
+      w.sections.forEach(sec => sec.exercises.forEach(ex => { if (ex.name === originalName) found = ex; }));
+      return found;
+    })();
+    if (!origEx) return;
+    setSession(prev => {
+      const newSets = { ...prev.sets };
+      const currentName = prev.swaps?.[originalName] || originalName;
+      delete newSets[currentName];
+      newSets[originalName] = Array.from({ length: origEx.sets }, () => ({ weight:"", reps:"", done:false }));
+      const newSwaps = { ...(prev.swaps||{}) };
+      delete newSwaps[originalName];
+      const newSwapData = { ...(prev.swapData||{}) };
+      delete newSwapData[originalName];
+      const updated = { ...prev, sets: newSets, swaps: newSwaps, swapData: newSwapData };
+      LS.set("grind_active_session", { session: updated, elapsed });
+      return updated;
+    });
+    setSwapModal(null);
+  }
+
+  // Helper: get the current exercise name and data (accounting for any swap)
+  function getEffectiveEx(originalEx) {
+    if (!session) return originalEx;
+    const swappedName = session.swaps?.[originalEx.name];
+    if (!swappedName) return originalEx;
+    return session.swapData?.[originalEx.name] || { ...originalEx, name: swappedName };
   }
 
   function getLastLog(exName) {
@@ -167,49 +274,115 @@ export default function App() {
     return bests;
   }
 
-  // ── REST TIMER OVERLAY ───────────────────────────────────────────────────
+  // ── NOTE EDITOR MODAL ────────────────────────────────────────────────────
+  function NoteEditorModal() {
+    if (!noteEditor) return null;
+    const [val, setVal] = useState(noteEditor.value);
+    return (
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", zIndex:100, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+        <div style={{ width:"100%", maxWidth:"430px", background:"#111", borderRadius:"16px 16px 0 0", padding:"20px 16px calc(env(safe-area-inset-bottom,0px) + 20px)" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px" }}>
+            <div>
+              <div style={{ fontSize:"10px", color:"#555", letterSpacing:"2px" }}>NOTE FOR</div>
+              <div style={{ fontSize:"16px", fontWeight:800, color:"#ddd" }}>{noteEditor.exName}</div>
+            </div>
+            <button onClick={() => setNoteEditor(null)} style={{ background:"none", border:"none", color:"#444", fontSize:"22px", cursor:"pointer" }}>✕</button>
+          </div>
+          <textarea
+            value={val}
+            onChange={e => setVal(e.target.value)}
+            placeholder="Add coaching notes, cues, weight targets, form reminders, how it felt..."
+            autoFocus
+            style={{ width:"100%", minHeight:"120px", background:"#1a1a1a", border:"1px solid #2a2a2a", borderRadius:"10px", color:"#ddd", fontSize:"14px", padding:"12px", outline:"none", resize:"none", fontFamily:"'Barlow Condensed',sans-serif", lineHeight:1.5 }}
+          />
+          <div style={{ display:"flex", gap:"8px", marginTop:"10px" }}>
+            <button style={{ ...S.btn("#e8a838",false), flex:2, padding:"12px" }} onClick={() => saveNote(noteEditor.exName, val)}>SAVE NOTE</button>
+            {noteEditor.value && (
+              <button style={{ ...S.btn("#c0392b",true), flex:1, padding:"12px" }} onClick={() => { saveNote(noteEditor.exName, ""); }}>CLEAR</button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── SWAP MODAL ───────────────────────────────────────────────────────────
+  function SwapModal() {
+    if (!swapModal) return null;
+    const { originalName } = swapModal;
+    const options = SWAPS[originalName] || [];
+    const isSwapped = !!(session?.swaps?.[originalName]);
+    const currentSwapName = session?.swaps?.[originalName];
+    return (
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.88)", zIndex:100, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+        <div style={{ width:"100%", maxWidth:"430px", background:"#111", borderRadius:"16px 16px 0 0", padding:"20px 16px calc(env(safe-area-inset-bottom,0px) + 20px)", maxHeight:"80vh", overflowY:"auto" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"14px" }}>
+            <div>
+              <div style={{ fontSize:"10px", color:"#555", letterSpacing:"2px" }}>SWAPPING</div>
+              <div style={{ fontSize:"16px", fontWeight:800, color:"#ddd", lineHeight:1.2 }}>{originalName}</div>
+              {isSwapped && <div style={{ fontSize:"10px", color:"#e05c2a", marginTop:"3px" }}>Currently: {currentSwapName}</div>}
+            </div>
+            <button onClick={() => setSwapModal(null)} style={{ background:"none", border:"none", color:"#444", fontSize:"22px", cursor:"pointer" }}>✕</button>
+          </div>
+          {isSwapped && (
+            <button onClick={() => revertSwap(originalName)}
+              style={{ width:"100%", padding:"12px", background:"#1a0a00", border:"1px solid #e05c2a40", borderRadius:"10px", color:"#e05c2a", fontSize:"13px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif", marginBottom:"10px", letterSpacing:"0.5px" }}>
+              ↩ REVERT TO ORIGINAL
+            </button>
+          )}
+          <div style={{ fontSize:"9px", color:"#333", letterSpacing:"2px", marginBottom:"8px" }}>SWAP FOR</div>
+          {options.length === 0 ? (
+            <div style={{ padding:"20px", textAlign:"center", color:"#333", fontSize:"13px" }}>No swap options defined for this exercise yet.</div>
+          ) : options.map((opt, i) => {
+            const isActive = currentSwapName === opt.name;
+            return (
+              <div key={i} onClick={() => applySwap(originalName, opt)}
+                style={{ padding:"14px 16px", background: isActive ? "#0e1a0e" : "#161616", border:`1px solid ${isActive ? "#27ae60" : "#222"}`, borderRadius:"10px", marginBottom:"8px", cursor:"pointer" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"4px" }}>
+                  <div style={{ fontSize:"14px", fontWeight:800, color: isActive ? "#27ae60" : "#ccc" }}>{opt.name}</div>
+                  <div style={{ display:"flex", gap:"6px" }}>
+                    <span style={{ fontSize:"9px", padding:"2px 7px", borderRadius:"4px", background:"#1a1a1a", color:"#444" }}>{opt.sets}×</span>
+                    <span style={{ fontSize:"9px", padding:"2px 7px", borderRadius:"4px", background:"#1a1a1a", color:"#444" }}>{opt.target}</span>
+                  </div>
+                </div>
+                <div style={{ fontSize:"11px", color:"#3a3a3a", lineHeight:1.4 }}>{opt.note}</div>
+                {isActive && <div style={{ fontSize:"9px", color:"#27ae60", fontWeight:800, marginTop:"6px", letterSpacing:"1px" }}>ACTIVE SWAP ✓</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
   function RestOverlay() {
     if (!restTimer) return null;
     const pct = restTimer.remaining / restTimer.total;
-    const isAlmostDone = restTimer.remaining <= 10;
-    const color = isAlmostDone ? "#27ae60" : "#e8a838";
-    const r = 52, circ = 2 * Math.PI * r;
-    const dash = circ * pct;
-
+    const isAlmost = restTimer.remaining <= 10;
+    const color = isAlmost ? "#27ae60" : "#e8a838";
+    const R = 22, circ = 2 * Math.PI * R;
     return (
-      <div style={{ position:"sticky", top:0, zIndex:30, margin:"0 16px", marginTop:"12px" }}>
-        <div style={{ background:"#0e0e0e", border:`1px solid ${color}40`, borderLeft:`3px solid ${color}`, borderRadius:"12px", padding:"14px 16px", display:"flex", alignItems:"center", gap:"16px" }}>
-          {/* Circular countdown */}
-          <div style={{ position:"relative", flexShrink:0, width:"56px", height:"56px" }}>
-            <svg width="56" height="56" style={{ transform:"rotate(-90deg)" }}>
-              <circle cx="28" cy="28" r={r-6} fill="none" stroke="#1a1a1a" strokeWidth="4" />
-              <circle cx="28" cy="28" r={r-6} fill="none" stroke={color} strokeWidth="4"
-                strokeDasharray={`${(circ*(r-6)/r).toFixed(1)} ${(circ*(r-6)/r).toFixed(1)}`}
-                strokeDashoffset={((circ*(r-6)/r) * (1-pct)).toFixed(1)}
+      <div style={{ margin:"10px 16px 0" }}>
+        <div style={{ background:"#0e0e0e", border:`1px solid ${color}40`, borderLeft:`3px solid ${color}`, borderRadius:"12px", padding:"12px 14px", display:"flex", alignItems:"center", gap:"14px" }}>
+          <div style={{ position:"relative", flexShrink:0, width:"52px", height:"52px" }}>
+            <svg width="52" height="52" style={{ transform:"rotate(-90deg)" }}>
+              <circle cx="26" cy="26" r={R} fill="none" stroke="#1a1a1a" strokeWidth="4" />
+              <circle cx="26" cy="26" r={R} fill="none" stroke={color} strokeWidth="4"
+                strokeDasharray={`${circ} ${circ}`}
+                strokeDashoffset={(circ * (1-pct)).toFixed(1)}
                 strokeLinecap="round" style={{ transition:"stroke-dashoffset 0.9s linear, stroke 0.3s" }} />
             </svg>
             <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ fontSize:"16px", fontWeight:900, color, fontVariantNumeric:"tabular-nums" }}>{restTimer.remaining}</span>
+              <span style={{ fontSize:"14px", fontWeight:900, color, fontVariantNumeric:"tabular-nums" }}>{restTimer.remaining}</span>
             </div>
           </div>
-          {/* Info */}
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:"9px", color:"#444", letterSpacing:"2px", marginBottom:"2px" }}>RESTING</div>
+            <div style={{ fontSize:"9px", color:"#444", letterSpacing:"2px" }}>RESTING</div>
             <div style={{ fontSize:"13px", fontWeight:800, color:"#bbb", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{restTimer.exName}</div>
-            <div style={{ fontSize:"10px", color:"#444", marginTop:"2px" }}>Set {restTimer.nextSetIdx + 1} next · {fmtDur(restTimer.total)} total</div>
+            <div style={{ fontSize:"10px", color:"#333", marginTop:"2px" }}>Set {restTimer.nextSetIdx+1} next · {fmtDur(restTimer.total)} total</div>
           </div>
-          {/* Skip button */}
-          <button onClick={() => setRestTimer(null)}
-            style={{ background:"#1a1a1a", border:"1px solid #2a2a2a", borderRadius:"8px", color:"#555", fontSize:"11px", fontWeight:700, padding:"8px 12px", cursor:"pointer", flexShrink:0, fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"1px" }}>
-            SKIP
-          </button>
+          <button onClick={() => setRestTimer(null)} style={{ background:"#1a1a1a", border:"1px solid #252525", borderRadius:"8px", color:"#555", fontSize:"10px", fontWeight:700, padding:"8px 10px", cursor:"pointer", flexShrink:0, fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"1px" }}>SKIP</button>
         </div>
-        {isAlmostDone && (
-          <div style={{ textAlign:"center", padding:"6px 0 0", fontSize:"11px", color:"#27ae60", fontWeight:800, letterSpacing:"2px", animation:"pulse 0.5s infinite alternate" }}>
-            GET READY
-          </div>
-        )}
-        <style>{`@keyframes pulse { from { opacity:0.6; } to { opacity:1; } }`}</style>
+        {isAlmost && <div style={{ textAlign:"center", padding:"5px 0 0", fontSize:"10px", color:"#27ae60", fontWeight:800, letterSpacing:"2px" }}>GET READY</div>}
       </div>
     );
   }
@@ -220,9 +393,11 @@ export default function App() {
     const prog = sessionProg();
     return (
       <div style={S.app}>
+        <NoteEditorModal />
+        <SwapModal />
         <div style={{ flex:1, overflowY:"auto", WebkitOverflowScrolling:"touch", paddingBottom:"24px" }}>
 
-          {/* Session header */}
+          {/* Header */}
           <div style={{ padding:"calc(env(safe-area-inset-top,0px) + 12px) 20px 10px", background:"#0a0a0a", borderBottom:"1px solid #1a1a1a", position:"sticky", top:0, zIndex:20 }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"8px" }}>
               <div>
@@ -244,12 +419,31 @@ export default function App() {
           <RestOverlay />
 
           {/* Set input panel */}
-          {setInput && !restTimer && (
-            <div style={{ margin:"10px 16px 0", background:"#161616", border:`1px solid ${w.color}40`, borderRadius:"12px", padding:"14px" }}>
-              <div style={{ fontSize:"10px", color:w.color, fontWeight:800, letterSpacing:"2px", marginBottom:"2px" }}>SET {setInput.idx+1} — {setInput.exName.toUpperCase()}</div>
+          {setInput && (
+            <div style={{ margin:"10px 16px 0", background:"#161616", border:`1px solid ${setInput.isEdit ? "#e05c2a" : w.color}40`, borderRadius:"12px", padding:"14px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"2px" }}>
+                <div>
+                  <div style={{ fontSize:"10px", color: setInput.isEdit ? "#e05c2a" : w.color, fontWeight:800, letterSpacing:"2px" }}>
+                    {setInput.isEdit ? "EDITING" : "LOGGING"} SET {setInput.idx+1}
+                  </div>
+                  <div style={{ fontSize:"12px", color:"#888", marginTop:"1px" }}>{setInput.exName}</div>
+                </div>
+                <button onClick={() => setNoteEditor({ exName: setInput.exName, value: notes[setInput.exName]||"" })}
+                  style={{ background:"#1a1a1a", border:"1px solid #252525", borderRadius:"7px", color:"#555", fontSize:"10px", fontWeight:700, padding:"6px 10px", cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>
+                  + NOTE
+                </button>
+              </div>
+              {/* Show existing note if any */}
+              {notes[setInput.exName] && (
+                <div style={{ padding:"7px 10px", background:"#0e1a0e", border:"1px solid #1a3a1a", borderRadius:"7px", marginBottom:"10px", marginTop:"6px" }}>
+                  <div style={{ fontSize:"9px", color:"#27ae60", letterSpacing:"2px", marginBottom:"3px" }}>YOUR NOTE</div>
+                  <div style={{ fontSize:"12px", color:"#4a8a4a", lineHeight:1.4 }}>{notes[setInput.exName]}</div>
+                </div>
+              )}
+              {/* Last log */}
               {(() => { const l = getLastLog(setInput.exName); return (
                 <div style={{ fontSize:"10px", color:"#3a3a3a", marginBottom:"10px" }}>
-                  {l ? `Last: ${l.weight} lbs × ${l.reps} reps` : "No previous log"}
+                  {l ? `Last logged: ${l.weight} lbs × ${l.reps} reps` : "No previous log"}
                 </div>
               );})()}
               <div style={{ display:"flex", gap:"10px", marginBottom:"10px" }}>
@@ -263,19 +457,13 @@ export default function App() {
                 </div>
               </div>
               <div style={{ display:"flex", gap:"8px" }}>
-                <button style={{ ...S.btn("#e8a838",false), flex:2, padding:"12px" }} onClick={() => logSet(setInput.exName, setInput.idx, wt||"BW", rp||"—")}>
-                  LOG ✓
+                <button style={{ ...S.btn(setInput.isEdit ? "#e05c2a" : "#e8a838", false), flex:2, padding:"12px" }}
+                  onClick={() => logSet(setInput.exName, setInput.idx, wt||"BW", rp||"—", setInput.isEdit)}>
+                  {setInput.isEdit ? "UPDATE ✓" : "LOG ✓"}
                 </button>
-                <button style={{ ...S.btn("#333",true), flex:1, padding:"12px" }} onClick={() => skipSet(setInput.exName, setInput.idx)}>SKIP</button>
+                {!setInput.isEdit && <button style={{ ...S.btn("#333",true), flex:1, padding:"12px" }} onClick={() => skipSet(setInput.exName, setInput.idx)}>SKIP</button>}
                 <button style={{ ...S.btn("#333",true), flex:1, padding:"12px" }} onClick={() => { setSetInput(null); setWt(""); setRp(""); }}>✕</button>
               </div>
-            </div>
-          )}
-
-          {/* Show "tap to log" prompt when resting */}
-          {restTimer && setInput && (
-            <div style={{ margin:"8px 16px 0", padding:"10px 14px", background:"#111", border:"1px solid #1e1e1e", borderRadius:"8px", textAlign:"center" }}>
-              <div style={{ fontSize:"11px", color:"#444" }}>Rest timer running — log input ready when you are</div>
             </div>
           )}
 
@@ -283,41 +471,70 @@ export default function App() {
           {w.sections.map((sec, si) => (
             <div key={si} style={S.card}>
               <div style={S.secHd(w.color)}>{sec.title.toUpperCase()}</div>
-              {sec.exercises.map((ex, ei) => {
+              {sec.exercises.map((originalEx, ei) => {
+                const ex = getEffectiveEx(originalEx);
+                const isSwapped = ex.name !== originalEx.name;
                 const exSets = session.sets[ex.name] || [];
                 const allDone = exSets.every(s => s.done);
+                const hasNote = !!notes[ex.name] || !!notes[originalEx.name];
+                const noteText = notes[ex.name] || notes[originalEx.name];
+                const hasSwapOptions = !!(SWAPS[originalEx.name]?.length);
                 return (
                   <div key={ei} style={{ padding:"13px 16px", borderBottom:"1px solid #0f0f0f", background: allDone ? "#0c130c" : "transparent" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"8px", marginBottom:"8px" }}>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:"14px", fontWeight:700, color: allDone ? "#27ae60" : "#ccc", lineHeight:1.2 }}>{ex.name}</div>
+                        <div style={{ display:"flex", alignItems:"center", gap:"6px", flexWrap:"wrap" }}>
+                          <div style={{ fontSize:"14px", fontWeight:700, color: allDone ? "#27ae60" : "#ccc", lineHeight:1.2 }}>{ex.name}</div>
+                          {isSwapped && <span style={{ fontSize:"9px", padding:"2px 6px", borderRadius:"4px", background:"#1a0800", color:"#e05c2a", fontWeight:700, border:"1px solid #e05c2a30" }}>SWAPPED</span>}
+                        </div>
+                        {isSwapped && <div style={{ fontSize:"9px", color:"#3a2a1a", marginTop:"1px" }}>Original: {originalEx.name}</div>}
                         <div style={{ fontSize:"10px", color:"#333", marginTop:"2px" }}>{ex.sets} sets · {ex.target}</div>
                         {ex.note ? <div style={{ fontSize:"9px", color:"#272727", marginTop:"2px", fontStyle:"italic", lineHeight:1.4 }}>{ex.note}</div> : null}
-                        {ex.rest > 0 && <div style={{ fontSize:"9px", color:"#1e3a1e", marginTop:"2px" }}>⏱ {fmtDur(ex.rest)} rest</div>}
+                        {ex.rest > 0 && <div style={{ fontSize:"9px", color:"#1e3020", marginTop:"2px" }}>⏱ {fmtDur(ex.rest)} rest</div>}
+                        {hasNote && (
+                          <div style={{ marginTop:"6px", padding:"5px 8px", background:"#0e1a0e", border:"1px solid #1a3a1a", borderRadius:"6px", display:"flex", alignItems:"flex-start", gap:"6px" }}>
+                            <span style={{ fontSize:"9px", color:"#27ae60", fontWeight:700, letterSpacing:"1px", flexShrink:0 }}>NOTE</span>
+                            <span style={{ fontSize:"10px", color:"#3a6a3a", lineHeight:1.4 }}>{noteText}</span>
+                          </div>
+                        )}
                       </div>
-                      {allDone && <div style={{ fontSize:"16px", color:"#27ae60", flexShrink:0 }}>✓</div>}
+                      <div style={{ display:"flex", flexDirection:"column", gap:"5px", alignItems:"flex-end" }}>
+                        {allDone && <div style={{ fontSize:"16px", color:"#27ae60" }}>✓</div>}
+                        <button onClick={() => setNoteEditor({ exName: ex.name, value: notes[ex.name]||"" })}
+                          style={{ background: hasNote?"#0e1a0e":"#1a1a1a", border:`1px solid ${hasNote?"#1a3a1a":"#252525"}`, borderRadius:"6px", color: hasNote?"#27ae60":"#333", fontSize:"9px", fontWeight:700, padding:"4px 8px", cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"1px" }}>
+                          {hasNote ? "NOTE ✓" : "+ NOTE"}
+                        </button>
+                        {hasSwapOptions && (
+                          <button onClick={() => setSwapModal({ originalName: originalEx.name, currentName: ex.name })}
+                            style={{ background: isSwapped?"#1a0800":"#1a1a1a", border:`1px solid ${isSwapped?"#e05c2a40":"#252525"}`, borderRadius:"6px", color: isSwapped?"#e05c2a":"#444", fontSize:"9px", fontWeight:700, padding:"4px 8px", cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"1px" }}>
+                            ⇄ SWAP
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {/* Set chips */}
                     <div style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
                       {exSets.map((set, si2) => {
-                        const isCurr = setInput?.exName===ex.name && setInput?.idx===si2;
-                        const isRestingThis = restTimer?.exName===ex.name && restTimer?.nextSetIdx===si2;
+                        const isCurr = setInput?.exName===ex.name && setInput?.idx===si2 && !setInput?.isEdit;
+                        const isEditing = setInput?.exName===ex.name && setInput?.idx===si2 && setInput?.isEdit;
+                        const isRestNext = restTimer?.exName===ex.name && restTimer?.nextSetIdx===si2;
                         return (
                           <div key={si2}
                             onClick={() => {
-                              if (!set.done) {
-                                if (restTimer) setRestTimer(null);
-                                setSetInput({ exName:ex.name, idx:si2 });
-                                setWt(set.weight||"");
-                                setRp(set.reps||"");
-                              }
+                              if (set.done) { openSetInput(ex.name, si2, true); }
+                              else { openSetInput(ex.name, si2, false); }
                             }}
-                            style={{ ...S.chip(set.done, isCurr || isRestingThis), border: isRestingThis && !set.done ? "2px solid #27ae60" : S.chip(set.done,isCurr).border }}>
+                            style={{
+                              ...S.chip(set.done, isCurr || isRestNext, isEditing),
+                              border: isRestNext && !set.done ? "2px solid #27ae60" : S.chip(set.done, isCurr, isEditing).border
+                            }}>
                             {set.done ? (
                               <>
-                                {set.weight ? <span style={{ fontSize:"9px", fontWeight:800, color:"#27ae60" }}>{set.weight}</span> : <span style={{ fontSize:"13px", color:"#27ae60" }}>✓</span>}
-                                {set.reps ? <span style={{ fontSize:"8px", color:"#2a5a2a" }}>{set.reps}</span> : null}
+                                {set.weight ? <span style={{ fontSize:"9px", fontWeight:800, color: isEditing?"#e05c2a":"#27ae60" }}>{set.weight}</span>
+                                  : <span style={{ fontSize:"13px", color:"#27ae60" }}>✓</span>}
+                                {set.reps ? <span style={{ fontSize:"8px", color: isEditing?"#6a3010":"#2a5a2a" }}>{set.reps}</span> : null}
                               </>
-                            ) : isRestingThis ? (
+                            ) : isRestNext ? (
                               <span style={{ fontSize:"9px", fontWeight:800, color:"#27ae60" }}>GO</span>
                             ) : (
                               <span style={{ fontSize:"12px", fontWeight:700, color: isCurr?"#e8a838":"#333" }}>{si2+1}</span>
@@ -326,6 +543,7 @@ export default function App() {
                         );
                       })}
                     </div>
+                    {allDone && <div style={{ fontSize:"9px", color:"#1e2e1e", marginTop:"6px", letterSpacing:"1px" }}>TAP ANY SET TO EDIT</div>}
                   </div>
                 );
               })}
@@ -334,10 +552,7 @@ export default function App() {
 
           <div style={{ padding:"20px 16px 8px" }}>
             <button style={S.btn(w.color,false)} onClick={finishSession}>FINISH SESSION →</button>
-            <button style={{ ...S.btn("#1a1a1a",true), marginTop:"8px", fontSize:"12px", color:"#333", border:"1px solid #1a1a1a" }}
-              onClick={() => { if (window.confirm("Abandon session? Progress won't be saved.")) { setSession(null); setActiveDay(null); setRestTimer(null); setTab("today"); }}}>
-              ABANDON
-            </button>
+            <button style={{ ...S.btn("#1a1a1a",true), marginTop:"8px", fontSize:"12px", color:"#333", border:"1px solid #1a1a1a" }} onClick={abandonSession}>ABANDON</button>
           </div>
         </div>
       </div>
@@ -347,6 +562,8 @@ export default function App() {
   // ── MAIN APP ─────────────────────────────────────────────────────────────
   return (
     <div style={S.app}>
+      <NoteEditorModal />
+      <SwapModal />
 
       <div style={S.hdr}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -359,6 +576,15 @@ export default function App() {
             <div style={{ fontSize:"26px", fontWeight:900, color:PHASE_COLORS[phase], lineHeight:1 }}>{phase} · {week}</div>
           </div>
         </div>
+        {/* Resume banner */}
+        {LS.get("grind_active_session") && tab !== "session" && (
+          <div onClick={() => {
+            const saved = LS.get("grind_active_session");
+            if (saved) { setSession(saved.session); setElapsed(saved.elapsed||0); setActiveDay(saved.session.dayId); setTab("session"); }
+          }} style={{ marginTop:"10px", padding:"9px 12px", background:"#1a1200", border:"1px solid #e8a83840", borderRadius:"8px", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div style={{ fontSize:"11px", color:"#e8a838", fontWeight:700 }}>SESSION IN PROGRESS — RESUME →</div>
+          </div>
+        )}
       </div>
 
       <div style={S.body}>
@@ -370,7 +596,7 @@ export default function App() {
               <div style={{ fontSize:"9px", color:"#2a2a2a", letterSpacing:"3px", marginBottom:"8px" }}>TODAY</div>
               {(() => {
                 const w = WORKOUTS[todayId];
-                const logged = history.find(h => h.date===formatDate(new Date()));
+                const logged = history.find(h => h.date===today());
                 return (
                   <div style={{ background:w.color, borderRadius:"14px", padding:"20px", position:"relative", overflow:"hidden" }}>
                     <div style={{ position:"absolute", right:"-30px", top:"-30px", width:"120px", height:"120px", borderRadius:"50%", background:"rgba(0,0,0,0.08)" }} />
@@ -392,7 +618,6 @@ export default function App() {
               })()}
             </div>
 
-            {/* Phase + Week */}
             <div style={{ padding:"14px 16px 0" }}>
               <div style={{ fontSize:"9px", color:"#2a2a2a", letterSpacing:"3px", marginBottom:"8px" }}>PHASE</div>
               <div style={{ display:"flex", gap:"8px", marginBottom:"8px" }}>
@@ -418,13 +643,12 @@ export default function App() {
               </div>
             </div>
 
-            {/* Week schedule */}
             <div style={{ padding:"14px 16px 0" }}>
               <div style={{ fontSize:"9px", color:"#2a2a2a", letterSpacing:"3px", marginBottom:"8px" }}>WEEK SCHEDULE</div>
               {DAY_ORDER.map(dayId => {
                 const w = WORKOUTS[dayId];
                 const isToday = dayId === todayId;
-                const logged = history.find(h => h.dayId===dayId && h.date===formatDate(new Date()));
+                const logged = history.find(h => h.dayId===dayId && h.date===today());
                 return (
                   <div key={dayId} onClick={() => { setActiveDay(dayId); setTab("day"); }}
                     style={{ display:"flex", alignItems:"center", gap:"12px", padding:"11px 14px", marginBottom:"5px", background: isToday ? `${w.color}12` : "#111", border:`1px solid ${isToday ? w.color+"30" : "#1a1a1a"}`, borderRadius:"10px", cursor:"pointer" }}>
@@ -448,7 +672,7 @@ export default function App() {
         {/* ── DAY DETAIL TAB ── */}
         {tab === "day" && activeDay && (() => {
           const w = WORKOUTS[activeDay];
-          const logged = history.find(h => h.date===formatDate(new Date()) && h.dayId===activeDay);
+          const logged = history.find(h => h.date===today() && h.dayId===activeDay);
           return (
             <>
               <div style={{ padding:"14px 16px 0", display:"flex", alignItems:"center", gap:"10px" }}>
@@ -473,16 +697,31 @@ export default function App() {
                   <div style={S.secHd(w.color)}>{sec.title.toUpperCase()}</div>
                   {sec.exercises.map((ex, ei) => {
                     const last = getLastLog(ex.name);
+                    const hasNote = !!notes[ex.name];
                     return (
                       <div key={ei} style={{ padding:"12px 16px", borderBottom:"1px solid #0f0f0f" }}>
-                        <div style={{ display:"flex", justifyContent:"space-between", gap:"8px", alignItems:"center" }}>
-                          <div style={{ fontSize:"14px", fontWeight:700, color:"#bbb", flex:1 }}>{ex.name}</div>
-                          <span style={S.tag("#1a1a1a","#2a2a2a")}>{ex.sets}×</span>
+                        <div style={{ display:"flex", justifyContent:"space-between", gap:"8px", alignItems:"flex-start" }}>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:"14px", fontWeight:700, color:"#bbb" }}>{ex.name}</div>
+                            <div style={{ fontSize:"10px", color:"#2a2a2a", marginTop:"2px" }}>{ex.target}</div>
+                            {ex.note ? <div style={{ fontSize:"9px", color:"#222", fontStyle:"italic", marginTop:"2px", lineHeight:1.4 }}>{ex.note}</div> : null}
+                            {ex.rest > 0 && <div style={{ fontSize:"9px", color:"#1e3020", marginTop:"2px" }}>⏱ {fmtDur(ex.rest)} rest</div>}
+                            {last && <div style={{ fontSize:"9px", color:`${w.color}70`, marginTop:"3px" }}>Last: {last.weight} lbs × {last.reps} reps</div>}
+                            {hasNote && (
+                              <div style={{ marginTop:"6px", padding:"5px 8px", background:"#0e1a0e", border:"1px solid #1a3a1a", borderRadius:"6px" }}>
+                                <div style={{ fontSize:"9px", color:"#27ae60", letterSpacing:"1px", marginBottom:"2px" }}>NOTE</div>
+                                <div style={{ fontSize:"10px", color:"#3a6a3a", lineHeight:1.4 }}>{notes[ex.name]}</div>
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ display:"flex", flexDirection:"column", gap:"5px", alignItems:"flex-end", flexShrink:0 }}>
+                            <span style={S.tag("#1a1a1a","#2a2a2a")}>{ex.sets}×</span>
+                            <button onClick={() => setNoteEditor({ exName: ex.name, value: notes[ex.name]||"" })}
+                              style={{ background: hasNote?"#0e1a0e":"#1a1a1a", border:`1px solid ${hasNote?"#1a3a1a":"#252525"}`, borderRadius:"6px", color: hasNote?"#27ae60":"#333", fontSize:"9px", fontWeight:700, padding:"4px 8px", cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>
+                              {hasNote ? "NOTE ✓" : "+ NOTE"}
+                            </button>
+                          </div>
                         </div>
-                        <div style={{ fontSize:"10px", color:"#2a2a2a", marginTop:"2px" }}>{ex.target}</div>
-                        {ex.note ? <div style={{ fontSize:"9px", color:"#222", fontStyle:"italic", marginTop:"2px", lineHeight:1.4 }}>{ex.note}</div> : null}
-                        {ex.rest > 0 && <div style={{ fontSize:"9px", color:"#1e3020", marginTop:"3px" }}>⏱ {fmtDur(ex.rest)} rest</div>}
-                        {last && <div style={{ fontSize:"9px", color:`${w.color}70`, marginTop:"3px" }}>Last: {last.weight} lbs × {last.reps} reps</div>}
                       </div>
                     );
                   })}
@@ -532,12 +771,25 @@ export default function App() {
 
         {/* ── PROGRESS TAB ── */}
         {tab === "progress" && (() => {
-          const KEY_LIFTS = ["Barbell Back Squat","Flat Barbell Bench Press","Weighted Pull-Ups","Romanian Deadlift","Barbell Hip Thrust","Overhead Press","Incline Barbell Press","Trap Bar Deadlift","Barbell Bent-Over Row"];
+          const KEY_LIFTS = ["Barbell back squat","Flat barbell bench press","Weighted pull-ups","Romanian deadlift","Barbell hip thrust","Overhead press","Incline barbell press","Trap bar deadlift","Barbell bent-over row"];
+          // match case-insensitively
+          function getBest(lift) {
+            const bests = [];
+            [...history].reverse().forEach(h => {
+              const key = Object.keys(h.sets||{}).find(k => k.toLowerCase()===lift.toLowerCase());
+              if (key && h.sets[key]) {
+                const valid = h.sets[key].filter(s => s.weight && !isNaN(Number(s.weight)));
+                const best = valid.reduce((m,s) => Math.max(m,Number(s.weight)), 0);
+                if (best > 0) bests.push({ date: h.date, weight: best });
+              }
+            });
+            return bests;
+          }
           return (
             <div style={{ padding:"14px 16px 0" }}>
               <div style={{ fontSize:"9px", color:"#2a2a2a", letterSpacing:"3px", marginBottom:"12px" }}>LIFT PROGRESS</div>
               {KEY_LIFTS.map(lift => {
-                const data = getBestForLift(lift);
+                const data = getBest(lift);
                 if (!data.length) return null;
                 const max = Math.max(...data.map(d=>d.weight));
                 const min = Math.min(...data.map(d=>d.weight));
@@ -561,7 +813,7 @@ export default function App() {
                       {data.length > 1 && (
                         <div style={{ display:"flex", alignItems:"flex-end", gap:"3px", height:"32px" }}>
                           {data.map((d,i) => {
-                            const range = max-min || 1;
+                            const range = max-min||1;
                             const h = Math.max(4, ((d.weight-min)/range)*26+6);
                             return <div key={i} style={{ flex:1, height:`${h}px`, background: i===data.length-1?"#e8a838":"#1e1e1e", borderRadius:"2px 2px 0 0", minWidth:"4px" }} />;
                           })}
@@ -571,7 +823,7 @@ export default function App() {
                   </div>
                 );
               })}
-              {KEY_LIFTS.every(l=>getBestForLift(l).length===0) && (
+              {KEY_LIFTS.every(l=>getBest(l).length===0) && (
                 <div style={{ textAlign:"center", padding:"60px 0", color:"#222" }}>
                   <div style={{ fontSize:"44px", marginBottom:"10px" }}>↑</div>
                   <div style={{ fontSize:"15px", fontWeight:700 }}>NO DATA YET</div>
@@ -584,12 +836,11 @@ export default function App() {
 
       </div>
 
-      {/* Bottom nav */}
       <div style={S.nav}>
         {[
-          { id:"today",    icon:"◎", label:"TODAY" },
-          { id:"day",      icon:"≡", label:"WORKOUT" },
-          { id:"history",  icon:"⊞", label:"LOG" },
+          { id:"today", icon:"◎", label:"TODAY" },
+          { id:"day",   icon:"≡", label:"WORKOUT" },
+          { id:"history", icon:"⊞", label:"LOG" },
           { id:"progress", icon:"↑", label:"GAINS" },
         ].map(t => (
           <button key={t.id} style={S.navBtn(tab===t.id)}
