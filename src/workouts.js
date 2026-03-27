@@ -72,7 +72,8 @@ export const WORKOUTS = {
       {
         title:"Isometrics",
         exercises:[
-          { name:"Spanish Squat Hold", sets:3, target:"45 sec", note:"Band around a fixed post. Lean back, squat to 90° — band pulls knees forward creating max quad and patellar tendon load. This is tendon prep, not warm-up. Ph3: go deeper and hold longer.", rest:60 },
+          { name:"Spanish Squat Hold", sets:3, target:"45 sec", note:"Band around a fixed post. Lean back, squat to 90° — band pulls knees forward creating max quad and patellar tendon load. Ph3: go deeper and hold longer.", rest:60 },
+          { name:"Split Stance Hold", sets:3, target:"20 sec/side", note:"Split squat position, hold at the bottom. Hip flexor and quad under simultaneous stretch and load — more specific to the single-leg work that follows than a wall sit. Lock in, no adjusting.", rest:45 },
         ]
       },
       {
@@ -101,8 +102,7 @@ export const WORKOUTS = {
         title:"Calves + Tibialis",
         exercises:[
           { name:"Standing Calf Raise", sets:4, target:"20 reps", note:"3 sec eccentric, 1 sec stretch at the bottom. Full range — heel drops as low as possible. Gastrocnemius.", rest:60 },
-          { name:"Seated Calf Raise", sets:3, target:"20 reps", note:"Knee at 90° — isolates the soleus which the standing version doesn't reach. Both heads require direct work.", rest:60 },
-          { name:"Tibialis Raise", sets:3, target:"20 reps", note:"Heels on a step, pull toes up against resistance. Prevents shin splints and controls ankle dorsiflexion — non-negotiable with sprinting and boxing footwork.", rest:45 },
+          { name:"Tibialis Raise", sets:3, target:"20 reps", note:"Heels on a step, pull toes up against resistance. Prevents shin splints — non-negotiable with sprinting and boxing footwork. Seated calf is on Lower B.", rest:45 },
         ]
       },
       {

@@ -45,8 +45,9 @@ export default function App() {
   const [notes, setNotes] = useState({});
   const [noteEditor, setNoteEditor] = useState(null);
   const [swapModal, setSwapModal] = useState(null);
-  // Custom workouts
+  // Custom workouts + preset overrides
   const [customWorkouts, setCustomWorkouts] = useState([]);
+  const [presetOverrides, setPresetOverrides] = useState({});
   // Builder state
   const [builder, setBuilder] = useState(null); // null | { mode:'new'|'edit', workout: {...} }
   const [builderEx, setBuilderEx] = useState(null); // exercise being added/edited in builder
@@ -63,6 +64,7 @@ export default function App() {
     const h = LS.get("grind_history"); if (h) setHistory(h);
     const n = LS.get("grind_notes"); if (n) setNotes(n);
     const cw = LS.get("grind_custom_workouts"); if (cw) setCustomWorkouts(cw);
+    const po = LS.get("grind_preset_overrides"); if (po) setPresetOverrides(po);
     const saved = LS.get("grind_active_session");
     if (saved) { setSession(saved.session); setElapsed(saved.elapsed||0); setActiveDay(saved.session.dayId); setTab("session"); }
   }, []);
@@ -92,6 +94,7 @@ export default function App() {
   function saveHistory(h) { setHistory(h); LS.set("grind_history", h); }
   function saveNotes(n) { setNotes(n); LS.set("grind_notes", n); }
   function saveCustomWorkouts(cw) { setCustomWorkouts(cw); LS.set("grind_custom_workouts", cw); }
+  function savePresetOverrides(po) { setPresetOverrides(po); LS.set("grind_preset_overrides", po); }
 
   // ── SESSION CORE ─────────────────────────────────────────────────────────
   function buildSessionSets(workout) {
@@ -163,7 +166,10 @@ export default function App() {
   function getSessionWorkout() {
     if (!session) return null;
     if (session.isCustom) return customWorkouts.find(cw => cw.id === session.customId) || WORKOUTS[session.dayId];
-    return WORKOUTS[session.dayId];
+    return presetOverrides[session.dayId] || WORKOUTS[session.dayId];
+  }
+  function getWorkout(dayId) {
+    return presetOverrides[dayId] || WORKOUTS[dayId];
   }
 
   // Add exercise to live session
@@ -281,12 +287,25 @@ export default function App() {
 
   function saveBuilderWorkout() {
     if (!builder.workout.name.trim()) { alert("Give your workout a name first."); return; }
-    if (builder.mode === "new") {
+    if (builder.mode === "preset") {
+      // Save as preset override
+      savePresetOverrides({ ...presetOverrides, [builder.presetDayId]: builder.workout });
+    } else if (builder.mode === "new") {
       saveCustomWorkouts([...customWorkouts, builder.workout]);
     } else {
       saveCustomWorkouts(customWorkouts.map(cw => cw.id === builder.workout.id ? builder.workout : cw));
     }
     setBuilder(null);
+  }
+  function editPresetWorkout(dayId) {
+    const workout = getWorkout(dayId);
+    setBuilder({ mode:"preset", presetDayId: dayId, workout: JSON.parse(JSON.stringify(workout)) });
+  }
+  function resetPresetWorkout(dayId) {
+    if (!window.confirm("Reset to original? Your edits will be lost.")) return;
+    const newOverrides = { ...presetOverrides };
+    delete newOverrides[dayId];
+    savePresetOverrides(newOverrides);
   }
 
   function builderAddEx(sectionIdx, ex) {
@@ -702,8 +721,13 @@ export default function App() {
         <div style={{ padding:"calc(env(safe-area-inset-top,0px) + 14px) 20px 12px", background:"#0a0a0a", borderBottom:"1px solid #1a1a1a", flexShrink:0, display:"flex", gap:"10px", alignItems:"center" }}>
           <button onClick={() => setBuilder(null)} style={{ background:"none", border:"none", color:"#555", fontSize:"26px", cursor:"pointer", lineHeight:1 }}>‹</button>
           <div style={{ flex:1, fontSize:"18px", fontWeight:900 }}>{builder.mode==="new"?"NEW WORKOUT":"EDIT WORKOUT"}</div>
-          <button onClick={saveBuilderWorkout} style={{ padding:"9px 16px", background:"#e8a838", border:"none", borderRadius:"8px", color:"#000", fontSize:"13px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>SAVE</button>
-        </div>
+          <div style={{ flex:1, fontSize:"18px", fontWeight:900 }}>{builder.mode==="new"?"NEW WORKOUT":builder.mode==="preset"?"EDIT PRESET":"EDIT WORKOUT"}</div>
+          <div style={{ display:"flex", gap:"6px", alignItems:"center" }}>
+            {builder.mode === "preset" && presetOverrides[builder.presetDayId] && (
+              <button onClick={() => { resetPresetWorkout(builder.presetDayId); setBuilder(null); }} style={{ padding:"9px 14px", background:"#1a0a0a", border:"1px solid #c0392b40", borderRadius:"8px", color:"#c0392b", fontSize:"11px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>RESET</button>
+            )}
+            <button onClick={saveBuilderWorkout} style={{ padding:"9px 16px", background:"#e8a838", border:"none", borderRadius:"8px", color:"#000", fontSize:"13px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>SAVE</button>
+          </div>
         <div style={{ flex:1, overflowY:"auto", WebkitOverflowScrolling:"touch", paddingBottom:"24px" }}>
           {/* Name + color */}
           <div style={{ padding:"14px 16px 0" }}>
@@ -865,16 +889,21 @@ export default function App() {
 
         {/* ── DAY DETAIL ── */}
         {tab === "day" && activeDay && (() => {
-          const w = WORKOUTS[activeDay];
+          const w = getWorkout(activeDay);
           const logged = history.find(h => h.date===today() && h.dayId===activeDay);
+          const isEdited = !!presetOverrides[activeDay];
           return (
             <>
               <div style={{ padding:"14px 16px 0", display:"flex", alignItems:"center", gap:"10px" }}>
                 <button onClick={() => setTab("today")} style={{ background:"none", border:"none", color:"#444", fontSize:"26px", cursor:"pointer", lineHeight:1 }}>‹</button>
-                <div>
+                <div style={{ flex:1 }}>
                   <div style={{ fontSize:"9px", color:w.color, letterSpacing:"3px", fontWeight:700 }}>{w.label.toUpperCase()}</div>
-                  <div style={{ fontSize:"20px", fontWeight:900 }}>{w.name}</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                    <div style={{ fontSize:"20px", fontWeight:900 }}>{w.name}</div>
+                    {isEdited && <span style={S.tag("#0a1a2a","#4a9eda")}>EDITED</span>}
+                  </div>
                 </div>
+                <button onClick={() => editPresetWorkout(activeDay)} style={{ padding:"8px 14px", background:"#1a1a1a", border:"1px solid #252525", borderRadius:"8px", color:"#888", fontSize:"11px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>EDIT</button>
               </div>
               <div style={{ padding:"10px 16px 0" }}>
                 {logged ? (
@@ -962,31 +991,60 @@ export default function App() {
         {/* ── BUILD ── */}
         {tab === "build" && (
           <div style={{ padding:"14px 16px 0" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px" }}>
+            {/* Preset workouts */}
+            <div style={{ fontSize:"9px", color:"#2a2a2a", letterSpacing:"3px", marginBottom:"10px" }}>PRESET WORKOUTS</div>
+            {DAY_ORDER.map(dayId => {
+              const w = getWorkout(dayId);
+              const isEdited = !!presetOverrides[dayId];
+              return (
+                <div key={dayId} style={{ ...S.card, marginBottom:"8px" }}>
+                  <div style={{ padding:"13px 16px", display:"flex", gap:"12px", alignItems:"center" }}>
+                    <div style={{ width:"46px", height:"46px", borderRadius:"10px", background:`${w.color}20`, border:`1px solid ${w.color}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <span style={{ fontSize:"10px", fontWeight:900, color:w.color }}>{w.label.slice(0,3).toUpperCase()}</span>
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+                        <div style={{ fontSize:"15px", fontWeight:800, color:"#ccc" }}>{w.name}</div>
+                        {isEdited && <span style={S.tag("#0a1a2a","#4a9eda")}>EDITED</span>}
+                      </div>
+                      <div style={{ fontSize:"10px", color:"#2a2a2a" }}>{w.subtitle}</div>
+                      <div style={{ fontSize:"10px", color:"#333", marginTop:"2px" }}>
+                        {w.sections.reduce((t,s)=>t+s.exercises.length,0)} exercises
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", gap:"6px", flexShrink:0 }}>
+                      <button onClick={() => startSession(dayId)} style={{ padding:"8px 12px", background:w.color, border:"none", borderRadius:"8px", color:"#000", fontSize:"11px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>START</button>
+                      <button onClick={() => editPresetWorkout(dayId)} style={{ padding:"8px 12px", background:"#1a1a1a", border:"1px solid #252525", borderRadius:"8px", color:"#666", fontSize:"11px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>EDIT</button>
+                      {isEdited && <button onClick={() => resetPresetWorkout(dayId)} style={{ padding:"8px 10px", background:"#1a0a0a", border:"1px solid #c0392b30", borderRadius:"8px", color:"#c0392b", fontSize:"11px", cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800 }}>↩</button>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {/* Custom workouts */}
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:"20px", marginBottom:"10px" }}>
               <div style={{ fontSize:"9px", color:"#2a2a2a", letterSpacing:"3px" }}>CUSTOM WORKOUTS</div>
               <button onClick={newCustomWorkout} style={{ padding:"8px 14px", background:"#e8a838", border:"none", borderRadius:"8px", color:"#000", fontSize:"12px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>+ NEW</button>
             </div>
             {customWorkouts.length === 0 ? (
-              <div style={{ textAlign:"center", padding:"50px 0", color:"#2a2a2a" }}>
-                <div style={{ fontSize:"44px", marginBottom:"10px" }}>⊕</div>
-                <div style={{ fontSize:"15px", fontWeight:700 }}>NO CUSTOM WORKOUTS YET</div>
-                <div style={{ fontSize:"11px", marginTop:"6px", color:"#222" }}>Tap + NEW to build your first one</div>
-                <button onClick={newCustomWorkout} style={{ marginTop:"16px", padding:"12px 24px", background:"#e8a838", border:"none", borderRadius:"10px", color:"#000", fontSize:"14px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>CREATE WORKOUT</button>
+              <div style={{ textAlign:"center", padding:"30px 0", color:"#2a2a2a" }}>
+                <div style={{ fontSize:"13px", fontWeight:700, marginBottom:"6px" }}>NO CUSTOM WORKOUTS YET</div>
+                <div style={{ fontSize:"11px", color:"#222" }}>Tap + NEW to build your first one</div>
               </div>
-            ) : customWorkouts.map((cw, i) => (
+            ) : customWorkouts.map((cw) => (
               <div key={cw.id} style={{ ...S.card, marginBottom:"8px" }}>
-                <div style={{ padding:"14px 16px", display:"flex", gap:"12px", alignItems:"center" }}>
+                <div style={{ padding:"13px 16px", display:"flex", gap:"12px", alignItems:"center" }}>
                   <div style={{ width:"46px", height:"46px", borderRadius:"10px", background:`${cw.color}20`, border:`1px solid ${cw.color}30`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                     <div style={{ width:"16px", height:"16px", borderRadius:"50%", background:cw.color }} />
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:"16px", fontWeight:800, color:"#ccc" }}>{cw.name}</div>
+                    <div style={{ fontSize:"15px", fontWeight:800, color:"#ccc" }}>{cw.name}</div>
                     {cw.subtitle && <div style={{ fontSize:"10px", color:"#2a2a2a" }}>{cw.subtitle}</div>}
                     <div style={{ fontSize:"10px", color:"#333", marginTop:"2px" }}>
-                      {cw.sections.reduce((t,s) => t + s.exercises.length, 0)} exercises · {cw.sections.length} section{cw.sections.length!==1?"s":""}
+                      {cw.sections.reduce((t,s)=>t+s.exercises.length,0)} exercises · {cw.sections.length} section{cw.sections.length!==1?"s":""}
                     </div>
                   </div>
-                  <div style={{ display:"flex", gap:"7px" }}>
+                  <div style={{ display:"flex", gap:"6px" }}>
                     <button onClick={() => startSession(null, cw)} style={{ padding:"8px 12px", background:cw.color, border:"none", borderRadius:"8px", color:"#000", fontSize:"11px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>START</button>
                     <button onClick={() => editCustomWorkout(cw)} style={{ padding:"8px 12px", background:"#1a1a1a", border:"1px solid #252525", borderRadius:"8px", color:"#666", fontSize:"11px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>EDIT</button>
                     <button onClick={() => deleteCustomWorkout(cw.id)} style={{ padding:"8px 10px", background:"#1a0a0a", border:"1px solid #c0392b30", borderRadius:"8px", color:"#c0392b", fontSize:"13px", cursor:"pointer" }}>✕</button>
