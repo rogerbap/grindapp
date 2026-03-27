@@ -1,20 +1,11 @@
 export const PHASE_COLORS = { 1: "#e8a838", 2: "#e05c2a", 3: "#c0392b" };
 export const DAY_ORDER = ["mon","tue","wed","thu","fri","sat","sun"];
 export const JS_TO_DAY = { 1:"mon",2:"tue",3:"wed",4:"thu",5:"fri",6:"sat",0:"sun" };
+// Schedule: Mon=Sprints | Tue=Boxing/Flex(optional) | Wed=Full REST | Thu=Lower A | Fri=Upper A | Sat=Lower B | Sun=Upper B
 
 export const WORKOUTS = {
   mon: {
-    label:"Monday", name:"Boxing", subtitle:"Skill + Conditioning", color:"#576574",
-    sections:[
-      { title:"Session", exercises:[
-        { name:"Boxing Training", sets:1, target:"Full session", note:"Combinations, footwork, bag work or sparring. Upper body and core dominant.", rest:0, tags:["push","pull","core","bodyweight","explosive"] },
-        { name:"Post-Session Foam Roll", sets:1, target:"8 min", note:"Shoulders, forearms, lats, hips. Prioritize what's tight.", rest:0, tags:["recovery","bodyweight"] },
-      ]},
-    ]
-  },
-
-  tue: {
-    label:"Tuesday", name:"Sprints", subtitle:"Dedicated Speed Day", color:"#27ae60",
+    label:"Monday", name:"Sprints", subtitle:"Dedicated speed day", color:"#27ae60",
     sections:[
       { title:"Dynamic Warm-Up", exercises:[
         { name:"Easy Jog", sets:1, target:"3 min", note:"Get the legs warm — don't skip this.", rest:0, tags:["sprint","bodyweight","warmup"] },
@@ -23,7 +14,7 @@ export const WORKOUTS = {
       ]},
       { title:"Phase 1 Protocol", exercises:[
         { name:"100m Sprint @ 75%", sets:6, target:"1 rep", note:"Walk back every rep — full recovery is what makes these quality.", rest:90, tags:["sprint","bodyweight","explosive","bilateral"] },
-        { name:"40m Acceleration @ 85%", sets:4, target:"1 rep", note:"Drive the arms hard — 90° bend, drive back not across.", rest:60, tags:["sprint","bodyweight","explosive","bilateral"] },
+        { name:"40m Acceleration @ 85%", sets:4, target:"1 rep", note:"Drive the arms hard — 90° bend, drive back not across. Shin angle forward at the start.", rest:60, tags:["sprint","bodyweight","explosive","bilateral"] },
       ]},
       { title:"Phase 2 Protocol", exercises:[
         { name:"100m Sprint @ 85%", sets:8, target:"1 rep", note:"75 sec rest between reps.", rest:75, tags:["sprint","bodyweight","explosive","bilateral"] },
@@ -39,12 +30,25 @@ export const WORKOUTS = {
     ]
   },
 
-  wed: {
-    label:"Wednesday", name:"Boxing", subtitle:"Skill + Conditioning", color:"#576574",
+  tue: {
+    label:"Tuesday", name:"Boxing / Flex", subtitle:"Optional boxing or full rest", color:"#576574",
     sections:[
-      { title:"Session", exercises:[
-        { name:"Boxing Training", sets:1, target:"Full session", note:"Combinations, defensive work, sparring or heavy bag.", rest:0, tags:["push","pull","core","bodyweight","explosive"] },
-        { name:"Post-Session Foam Roll", sets:1, target:"8 min", note:"Shoulders, forearms, upper back, hips.", rest:0, tags:["recovery","bodyweight"] },
+      { title:"Options", exercises:[
+        { name:"Boxing Training", sets:1, target:"Full session", note:"Best use of Tuesday — full rest Wednesday means fatigue clears before Thursday. Combinations, bag work, sparring, footwork.", rest:0, tags:["push","pull","core","bodyweight","explosive"] },
+        { name:"Mobility Session", sets:1, target:"30 min", note:"Run the Mobility + Recovery session from the BUILD tab if skipping boxing. Keeps movement quality high mid-week.", rest:0, tags:["recovery","bodyweight","mobility"] },
+        { name:"Full Rest", sets:1, target:"All day", note:"Completely valid — especially in Phase 2 and 3 when intensity is high. Listen to your body.", rest:0, tags:["recovery"] },
+      ]},
+    ]
+  },
+
+  wed: {
+    label:"Wednesday", name:"Full Rest", subtitle:"Recovery day — nothing", color:"#2c3e50",
+    sections:[
+      { title:"Rest Protocol", exercises:[
+        { name:"Sleep 8–9 hrs", sets:1, target:"Non-negotiable", note:"Growth hormone peaks in deep sleep. This is when the adaptations from the previous week consolidate.", rest:0, tags:["recovery"] },
+        { name:"1 Gallon Water", sets:1, target:"Minimum", note:"", rest:0, tags:["recovery"] },
+        { name:"Light Walk", sets:1, target:"10–20 min optional", note:"Promotes circulation without adding stress. Not mandatory.", rest:0, tags:["recovery","bodyweight"] },
+        { name:"Meal Prep", sets:1, target:"Optional", note:"Set up nutrition for Thu–Sun lifting block.", rest:0, tags:["recovery"] },
       ]},
     ]
   },
@@ -55,7 +59,6 @@ export const WORKOUTS = {
       { title:"Activation", exercises:[
         { name:"Banded Lateral Walk", sets:2, target:"15 steps/side", note:"Most important direction — activates glute medius which stabilizes every single-leg movement. Band taut, knees don't cave.", rest:20, tags:["glute","adductor","band","bilateral","warmup"] },
         { name:"Hip CARs", sets:2, target:"5 reps/side", note:"Full slow circle of the hip joint — forward then backward. Opens the joint capsule, improves ROM for deep squats.", rest:30, tags:["hip","bodyweight","unilateral","warmup"] },
-        { name:"Frog Stretch Hold", sets:2, target:"30 sec", note:"Groin and adductor prep before any lateral loading.", rest:20, tags:["adductor","bodyweight","iso","warmup"] },
       ]},
       { title:"Power Primer", exercises:[
         { name:"Kneeling to Tuck Jump", sets:4, target:"3 reps", note:"Tall kneeling — explode both feet to floor landing in squat, immediately drive both knees to chest at peak. Full reset between every rep — max CNS demand.", rest:120, tags:["quad","glute","plyo","bodyweight","explosive","bilateral"] },
@@ -94,16 +97,14 @@ export const WORKOUTS = {
     sections:[
       { title:"Activation", exercises:[
         { name:"Band Pull-Aparts", sets:3, target:"15 reps", note:"Arms straight, pull band to chest. Rear delt and mid-trap activation — most important pre-press movement.", rest:30, tags:["shoulder","back","band","isolation","bilateral","warmup"] },
-        { name:"Dead Hang", sets:2, target:"20 sec", note:"Full bodyweight hang. Decompresses shoulder joint, activates lats passively.", rest:30, tags:["back","bodyweight","iso","bilateral","warmup"] },
-        { name:"Slow Controlled Single-Arm DB Row", sets:3, target:"8 reps/side", note:"3 sec down, pause at stretch, 2 sec pull. Light weight — activates lat and mid-back before loading them.", rest:45, tags:["back","dumbbell","pull","isolation","unilateral","warmup"] },
+        { name:"Push-Up to Downward Dog", sets:2, target:"10 reps", note:"Perform a push-up then push hips back to downward dog — stretches lats and chest dynamically. Warms up push and pull muscles together.", rest:30, tags:["chest","back","bodyweight","compound","bilateral","warmup"] },
       ]},
       { title:"Power Primer", exercises:[
         { name:"Hang Clean High Pull", sets:4, target:"4 reps", note:"Bar at mid-thigh. Aggressive triple extension — ankle, knee, hip simultaneously. Shrug hard, pull bar to sternum with elbows high and wide. Hip power not bicep curl.", rest:120, tags:["back","shoulder","trap","barbell","pull","compound","bilateral","explosive"] },
         { name:"Plyo Push-Ups", sets:3, target:"6 reps", note:"Hands leave the floor. Lower under control, explode upward. Reset each rep.", rest:60, tags:["chest","shoulder","tricep","bodyweight","push","compound","bilateral","explosive"] },
       ]},
       { title:"Isometrics", exercises:[
-        { name:"Wall Chest Push", sets:3, target:"30 sec", note:"Arms at 90°, push maximally into wall. Chest and tricep tendon loading before pressing.", rest:60, tags:["chest","tricep","bodyweight","iso","bilateral"] },
-        { name:"Dead Hang", sets:3, target:"30 sec", note:"Lat and bicep tendon loading before pulling.", rest:60, tags:["back","bicep","bodyweight","iso","bilateral"] },
+        { name:"Dead Hang", sets:3, target:"30 sec", note:"Lat and bicep tendon loading before heavy pulling. Decompresses the shoulder joint before pressing — do these before both your press and pull work.", rest:60, tags:["back","bicep","bodyweight","iso","bilateral"] },
       ]},
       { title:"Chest — Heavy Compounds", exercises:[
         { name:"Incline Barbell Press", sets:4, target:"8 reps", note:"30–45° incline. Upper chest and front delt. Don't exceed 45°. Tempo applies.", rest:180, tags:["chest","shoulder","tricep","barbell","push","compound","bilateral"] },
@@ -116,6 +117,7 @@ export const WORKOUTS = {
       { title:"Accessories", exercises:[
         { name:"Incline DB Fly", sets:3, target:"12 reps", note:"Slow eccentric — feel every fiber of upper pec lengthen. Don't let arms drop too low.", rest:90, tags:["chest","dumbbell","push","isolation","bilateral"], superset:"ss_chest_back_a" },
         { name:"Lat Pullover", sets:3, target:"12 reps", note:"DB held in both hands, lower behind head with soft elbows — full lat stretch. Pull back over chest.", rest:90, tags:["back","chest","dumbbell","pull","isolation","bilateral"], superset:"ss_chest_back_a" },
+        { name:"Single-Arm DB Row", sets:3, target:"10 reps/side", note:"Brace on bench, full stretch at bottom — this earns its place as a working set, not a warm-up. Drive elbow back past hip. 3 sec eccentric.", rest:90, tags:["back","bicep","dumbbell","pull","compound","unilateral"] },
         { name:"Barbell Shrug", sets:3, target:"15 reps", note:"Hold 1 sec at top. Straight up, straight down — no rolling.", rest:90, tags:["trap","barbell","pull","isolation","bilateral"] },
       ]},
       { title:"Rotator Cuff", exercises:[
@@ -129,9 +131,8 @@ export const WORKOUTS = {
     label:"Saturday", name:"Lower B", subtitle:"Posterior Chain + Vertical + Athletic", color:"#c0392b",
     sections:[
       { title:"Activation", exercises:[
-        { name:"Banded Lateral Walk", sets:2, target:"15 steps/side", note:"Same as Lower A — glute medius activation before any posterior chain loading.", rest:20, tags:["glute","adductor","band","bilateral","warmup"] },
-        { name:"Hip Flexor Stretch", sets:2, target:"45 sec/side", note:"Kneeling lunge. Opens hip extension range for deadlifts and jumps. Posterior pelvic tilt to deepen.", rest:20, tags:["hip","bodyweight","iso","unilateral","warmup"] },
-        { name:"Glute Bridge Hold", sets:2, target:"10 reps + 5 sec hold", note:"Drive up and squeeze hard at top for 5 seconds each rep. Glute activation before loading them.", rest:30, tags:["glute","hamstring","bodyweight","iso","bilateral","warmup"] },
+        { name:"Banded Lateral Walk", sets:2, target:"15 steps/side", note:"Glute medius activation before posterior chain loading — same as Lower A.", rest:20, tags:["glute","adductor","band","bilateral","warmup"] },
+        { name:"World's Greatest Stretch", sets:2, target:"5 reps/side", note:"Step into a deep lunge, place same-side hand on the floor, rotate opposite arm to the sky. One movement covers hip flexor lengthening, thoracic rotation, adductor opening, and glute activation dynamically. Far superior to static holds pre-lift.", rest:30, tags:["hip","adductor","back","bodyweight","compound","unilateral","warmup"] },
       ]},
       { title:"Power Primer", exercises:[
         { name:"Kettlebell Snatch", sets:4, target:"5 reps/side", note:"Hike KB back, drive hips forward explosively, punch overhead in one motion. Hip snap — not a shoulder press. Develops posterior chain power for sprinting and jumping.", rest:120, tags:["glute","hamstring","shoulder","kettlebell","hinge","compound","unilateral","explosive"] },
@@ -143,21 +144,21 @@ export const WORKOUTS = {
         { name:"Depth Jump to Max Reach", sets:3, target:"5 reps", note:"Ph2–3 only. Step off box, land, explode immediately — ground contact under 0.2 seconds.", rest:120, tags:["quad","glute","plyo","bodyweight","explosive","bilateral","box"] },
       ]},
       { title:"Isometrics", exercises:[
-        { name:"RDL Hold at Mid-Shin", sets:3, target:"30 sec", note:"50% load — hold hinge position at mid-shin. Hamstring and posterior knee tendon loading before heavy work.", rest:60, tags:["hamstring","barbell","hinge","iso","bilateral"] },
+        { name:"Single-Leg RDL Hold", sets:3, target:"20 sec/side", note:"Stand on one leg, hinge to mid-shin level, hold. Same hamstring tendon loading as bilateral RDL hold but adds proprioceptive demand and is more specific to the single-leg work that follows. Use light DB for counterbalance if needed.", rest:45, tags:["hamstring","bodyweight","hinge","iso","unilateral"] },
       ]},
       { title:"Posterior Chain Strength", exercises:[
         { name:"Nordic Curls", sets:3, target:"6 reps", note:"Ph2–3 only. Do FIRST while hamstrings are completely fresh. Kneel on pad, anchor feet, lower body using hamstring eccentric control as slowly as possible.", rest:120, tags:["hamstring","bodyweight","hinge","compound","bilateral"] },
         { name:"Trap Bar Deadlift", sets:4, target:"5 reps", note:"Primary strength driver today. No squats — spine is fully recovered from Thursday. Controlled descent, explosive hip drive.", rest:180, tags:["hamstring","glute","back","barbell","hinge","compound","bilateral"] },
-        { name:"Romanian Deadlift", sets:4, target:"10 reps", note:"Hamstring hypertrophy after the heavy hinge. Feel full stretch at bottom every rep. Tempo applies.", rest:180, tags:["hamstring","glute","barbell","hinge","compound","bilateral"] },
+        { name:"Romanian Deadlift", sets:3, target:"8 reps", note:"Hamstring hypertrophy after the heavy hinge. Feel full stretch at bottom every rep. Reduced from 4 sets given spinal load already accumulated from trap bar deadlift. Tempo applies.", rest:180, tags:["hamstring","glute","barbell","hinge","compound","bilateral"] },
         { name:"Barbell Hip Thrust", sets:4, target:"12 reps", note:"Squeeze plus 1 sec hold at top every rep. Primary glute hypertrophy exercise.", rest:120, tags:["glute","hamstring","barbell","compound","bilateral"] },
-        { name:"Seated Leg Curl", sets:4, target:"12 reps", note:"3 sec eccentric. The slow lowering is what drives hamstring hypertrophy.", rest:90, tags:["hamstring","machine","isolation","bilateral"] },
+        { name:"Seated Leg Curl", sets:3, target:"10 reps", note:"3 sec eccentric. Hypertrophy-focused — targets the shortened and mid-range position that Nordic curls don't emphasize. Reduced sets since Nordic curls cover the lengthened position.", rest:90, tags:["hamstring","machine","isolation","bilateral"] },
       ]},
       { title:"Adductors", exercises:[
         { name:"Adductor Machine", sets:3, target:"15 reps", note:"3 sec eccentric opening — the lengthening is where the adaptation happens. Full range.", rest:90, tags:["adductor","machine","isolation","bilateral"] },
         { name:"Copenhagen Plank", sets:3, target:"25 sec/side", note:"Top leg on bench, bottom leg hanging. Groin injury prevention — evidence-backed.", rest:60, tags:["adductor","core","bodyweight","iso","unilateral"] },
       ]},
       { title:"Conditioning Finisher", exercises:[
-        { name:"Sled Sprint Carry", sets:4, target:"20 yards", note:"Lean in, drive the knees, big arm swing. Ph1: light load, mechanics. Ph2: moderate, controlled aggression. Ph3: heavy, max effort. 90 sec rest.", rest:90, tags:["quad","glute","hamstring","sled","compound","bilateral","explosive"] },
+        { name:"Sled Sprint Carry", sets:4, target:"20 yards", note:"Lean in, drive the knees, big arm swing. Ph1: light load, mechanics. Ph2: moderate. Ph3: heavy, max effort. 90 sec rest. NO SLED ALTERNATIVES: Hill sprints (best substitute — same leg drive demand), resistance band resisted sprints (anchor band at waist, sprint against resistance), or loaded gym bag pushed across turf floor.", rest:90, tags:["quad","glute","hamstring","sled","compound","bilateral","explosive"] },
       ]},
     ]
   },
@@ -215,6 +216,40 @@ export const WORKOUTS = {
       ]},
     ]
   },
+};
+
+
+// ── MOBILITY & RECOVERY SESSION ──────────────────────────────────────────
+// Not assigned to a fixed day — access from BUILD tab and start anytime.
+// Ideal: morning on any training day, or on a true rest day.
+export const MOBILITY_SESSION = {
+  label:"Anytime", name:"Mobility + Recovery", subtitle:"Daily movement quality", color:"#16a085",
+  sections:[
+    { title:"Thoracic Spine", exercises:[
+      { name:"World's Greatest Stretch", sets:3, target:"5 reps/side", note:"Deep lunge, same-side hand to floor, rotate opposite arm to sky. Covers hip flexor, T-spine, adductor, and glute in one movement. Move slowly — feel every range.", rest:20, tags:["hip","back","adductor","bodyweight","compound","unilateral","mobility"] },
+      { name:"Thoracic Rotation on Foam Roller", sets:2, target:"10 reps/side", note:"Seated, roller behind upper back, hands behind head. Rotate each side — this unlocks the T-spine that gets jammed from pressing and boxing.", rest:20, tags:["back","bodyweight","mobility"] },
+      { name:"Cat-Cow", sets:2, target:"10 reps", note:"Full spinal flexion and extension. Slow — 3 seconds each direction. Wakes up the entire spine.", rest:15, tags:["back","core","bodyweight","mobility"] },
+    ]},
+    { title:"Hip + Groin", exercises:[
+      { name:"90/90 Hip Switch", sets:3, target:"8 reps/side", note:"Seated with both knees bent at 90°, rotate hips to each side lifting the knee. This is the most direct hip internal and external rotation work you can do. Non-negotiable for basketball and boxing hip mobility.", rest:20, tags:["hip","glute","adductor","bodyweight","unilateral","mobility"] },
+      { name:"Pigeon Stretch Hold", sets:2, target:"45 sec/side", note:"Figure-4 position — front leg bent, rear leg extended. Sink into the hip. The static hold here is appropriate because this is post-activation recovery work, not pre-lift prep.", rest:20, tags:["hip","glute","bodyweight","iso","unilateral","mobility"] },
+      { name:"Deep Squat Hold", sets:2, target:"45 sec", note:"Feet shoulder-width, heels flat if possible, hold bottom of squat. Grab a rack if needed. Loads ankle dorsiflexion and hip flexors in their full range.", rest:20, tags:["quad","hip","adductor","calf","bodyweight","iso","bilateral","mobility"] },
+      { name:"Adductor Rockback", sets:2, target:"10 reps/side", note:"On all fours, one leg extended to the side, rock hips back toward the extended leg. Eccentric adductor loading through range — specific to the lateral cuts in basketball.", rest:20, tags:["adductor","hip","bodyweight","mobility"] },
+    ]},
+    { title:"Hamstring + Posterior Chain", exercises:[
+      { name:"Single-Leg Forward Fold", sets:2, target:"30 sec/side", note:"Stand on one leg, fold forward reaching toward the floor. Hamstring and calf flexibility plus balance. Appropriate here as a static hold — this is mobility work not pre-lift warm-up.", rest:15, tags:["hamstring","calf","bodyweight","iso","unilateral","mobility"] },
+      { name:"Hip Flexor Couch Stretch", sets:2, target:"45 sec/side", note:"Rear foot elevated on bench or couch, front foot forward, drive hips forward. The most effective hip flexor stretch that exists. Especially important with all the sprint and boxing work — hip flexors get chronically short.", rest:20, tags:["hip","quad","bodyweight","iso","unilateral","mobility"] },
+    ]},
+    { title:"Shoulder + Upper Back", exercises:[
+      { name:"Band Distraction Stretch", sets:2, target:"30 sec/side", note:"Loop band around a rack at shoulder height, step forward creating tension, shoulder in external rotation. Decompresses the shoulder joint capsule — critical with heavy pressing and boxing twice a week.", rest:15, tags:["shoulder","band","iso","unilateral","mobility"] },
+      { name:"Doorway Pec Stretch", sets:2, target:"30 sec/side", note:"Arm at 90° on doorframe, lean forward. Reverses the internal rotation pattern that boxing and bench pressing create chronically.", rest:15, tags:["chest","shoulder","bodyweight","iso","unilateral","mobility"] },
+      { name:"Sleeper Stretch", sets:2, target:"30 sec/side", note:"Lie on side, push forearm toward floor — posterior shoulder capsule stretch. Essential for overhead press longevity and rotator cuff health.", rest:15, tags:["shoulder","bodyweight","iso","unilateral","mobility"] },
+    ]},
+    { title:"Ankle + Lower Leg", exercises:[
+      { name:"Ankle CARs", sets:2, target:"10 circles/side", note:"Full controlled circles of the ankle joint in both directions. Ankle mobility is the most underrated limiter in squatting depth and jumping mechanics.", rest:15, tags:["calf","bodyweight","unilateral","mobility"] },
+      { name:"Calf Hang (Eccentric)", sets:3, target:"10 reps/side", note:"One foot on a step, lower heel below step level slowly — 4 sec eccentric. This is Achilles tendon health work, not just calf flexibility. Critical given sprint load.", rest:30, tags:["calf","bodyweight","iso","unilateral","mobility"] },
+    ]},
+  ]
 };
 
 // ── FLAT EXERCISE LIBRARY ─────────────────────────────────────────────────

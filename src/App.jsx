@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { WORKOUTS, PHASE_COLORS, DAY_ORDER, JS_TO_DAY, PHASE_INFO, TEMPO, SWAPS, EXERCISE_LIBRARY } from "./workouts.js";
+import { WORKOUTS, PHASE_COLORS, DAY_ORDER, JS_TO_DAY, PHASE_INFO, TEMPO, SWAPS, EXERCISE_LIBRARY, MOBILITY_SESSION } from "./workouts.js";
 
 function getTodayId() { return JS_TO_DAY[new Date().getDay()]; }
 function formatDate(d) { return d.toISOString().split("T")[0]; }
@@ -117,12 +117,15 @@ export default function App() {
     workout.sections.forEach(sec=>sec.exercises.forEach(ex=>{
       sets[ex.id||ex.name]=Array.from({length:ex.sets},()=>({weight:"",reps:"",done:false}));
     }));
-    const newSession={dayId,sets,isCustom:!!customWorkout,customId:customWorkout?.id};
+    const isMobility=dayId==="mobility_static";
+    const newSession={dayId,sets,isCustom:isMobility||!!customWorkout,customId:isMobility?"__mobility__":customWorkout?.id,mobilitySession:isMobility};
+    if(isMobility)newSession._mobilityWorkout=workout;
     setSession(newSession);setActiveDay(dayId);setRestTimer(null);setTab("session");
   }
 
   function getSessionWorkout(){
     if(!session)return null;
+    if(session.mobilitySession)return session._mobilityWorkout||MOBILITY_SESSION;
     if(session.isCustom)return customWorkouts.find(cw=>cw.id===session.customId)||getWorkout(session.dayId);
     return getWorkout(session.dayId);
   }
@@ -990,14 +993,14 @@ export default function App() {
                   <div style={{background:w.color,borderRadius:"14px",padding:"20px",position:"relative",overflow:"hidden"}}>
                     <div style={{position:"absolute",right:"-30px",top:"-30px",width:"120px",height:"120px",borderRadius:"50%",background:"rgba(0,0,0,0.08)"}}/>
                     <div style={{fontSize:"10px",fontWeight:800,color:"rgba(0,0,0,0.4)",letterSpacing:"2px"}}>{w.label.toUpperCase()}</div>
-                    <div style={{fontSize:"32px",fontWeight:900,color:"#000",lineHeight:1,marginTop:"2px"}}>{w.name.toUpperCase()}</div>
-                    <div style={{fontSize:"13px",color:"rgba(0,0,0,0.5)",marginTop:"4px"}}>{w.subtitle}</div>
+                    <div style={{fontSize:"32px",fontWeight:900,color: w.color==="#2c3e50"?"#f0f0f0":"#000",lineHeight:1,marginTop:"2px"}}>{w.name.toUpperCase()}</div>
+                    <div style={{fontSize:"13px",color: w.color==="#2c3e50"?"rgba(255,255,255,0.5)":"rgba(0,0,0,0.5)",marginTop:"4px"}}>{w.subtitle}</div>
                     {logged?(
                       <div style={{marginTop:"14px",padding:"10px 14px",background:"rgba(0,0,0,0.12)",borderRadius:"8px"}}>
                         <div style={{fontSize:"12px",color:"rgba(0,0,0,0.6)",fontWeight:700}}>✓ COMPLETED · {fmtDur(logged.duration||0)}</div>
                       </div>
                     ):(
-                      <button onClick={()=>startSession(todayId)} style={{marginTop:"14px",width:"100%",padding:"13px",background:"rgba(0,0,0,0.88)",color:w.color,border:"none",borderRadius:"10px",fontSize:"14px",fontWeight:900,cursor:"pointer",letterSpacing:"1px",fontFamily:"'Barlow Condensed',sans-serif"}}>
+                      w.color!=="#2c3e50"&&<button onClick={()=>startSession(todayId)} style={{marginTop:"14px",width:"100%",padding:"13px",background:"rgba(0,0,0,0.88)",color:w.color,border:"none",borderRadius:"10px",fontSize:"14px",fontWeight:900,cursor:"pointer",letterSpacing:"1px",fontFamily:"'Barlow Condensed',sans-serif"}}>
                         START SESSION →
                       </button>
                     )}
@@ -1169,6 +1172,23 @@ export default function App() {
 
         {tab==="build"&&(
           <div style={{padding:"14px 16px 0"}}>
+            {/* Mobility session card */}
+            <div style={{...S.card,marginBottom:"16px",border:"1px solid #16a08540"}}>
+              <div style={{padding:"14px 16px",display:"flex",gap:"12px",alignItems:"center"}}>
+                <div style={{width:"46px",height:"46px",borderRadius:"10px",background:"#16a08520",border:"1px solid #16a08530",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <span style={{fontSize:"18px"}}>🧘</span>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:"15px",fontWeight:800,color:"#16a085"}}>Mobility + Recovery</div>
+                  <div style={{fontSize:"10px",color:"#2a2a2a"}}>Daily movement quality — anytime</div>
+                  <div style={{fontSize:"10px",color:"#1a4a3a",marginTop:"2px"}}>T-spine · Hips · Hamstrings · Shoulders · Ankles</div>
+                </div>
+                <button onClick={()=>startSession("mobility_static", MOBILITY_SESSION)}
+                  style={{padding:"8px 12px",background:"#16a085",border:"none",borderRadius:"8px",color:"#000",fontSize:"11px",fontWeight:800,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",flexShrink:0}}>
+                  START
+                </button>
+              </div>
+            </div>
             <div style={{fontSize:"9px",color:"#2a2a2a",letterSpacing:"3px",marginBottom:"10px"}}>PRESET WORKOUTS</div>
             {DAY_ORDER.map(dayId=>{
               const w=getWorkout(dayId);
