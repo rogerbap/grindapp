@@ -720,7 +720,6 @@ export default function App() {
         <BuilderExModal />
         <div style={{ padding:"calc(env(safe-area-inset-top,0px) + 14px) 20px 12px", background:"#0a0a0a", borderBottom:"1px solid #1a1a1a", flexShrink:0, display:"flex", gap:"10px", alignItems:"center" }}>
           <button onClick={() => setBuilder(null)} style={{ background:"none", border:"none", color:"#555", fontSize:"26px", cursor:"pointer", lineHeight:1 }}>‹</button>
-          <div style={{ flex:1, fontSize:"18px", fontWeight:900 }}>{builder.mode==="new"?"NEW WORKOUT":"EDIT WORKOUT"}</div>
           <div style={{ flex:1, fontSize:"18px", fontWeight:900 }}>{builder.mode==="new"?"NEW WORKOUT":builder.mode==="preset"?"EDIT PRESET":"EDIT WORKOUT"}</div>
           <div style={{ display:"flex", gap:"6px", alignItems:"center" }}>
             {builder.mode === "preset" && presetOverrides[builder.presetDayId] && (
@@ -728,6 +727,7 @@ export default function App() {
             )}
             <button onClick={saveBuilderWorkout} style={{ padding:"9px 16px", background:"#e8a838", border:"none", borderRadius:"8px", color:"#000", fontSize:"13px", fontWeight:800, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif" }}>SAVE</button>
           </div>
+        </div>
         <div style={{ flex:1, overflowY:"auto", WebkitOverflowScrolling:"touch", paddingBottom:"24px" }}>
           {/* Name + color */}
           <div style={{ padding:"14px 16px 0" }}>
