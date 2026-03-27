@@ -3,13 +3,12 @@ export const DAY_ORDER = ["mon","tue","wed","thu","fri","sat","sun"];
 export const JS_TO_DAY = { 1:"mon",2:"tue",3:"wed",4:"thu",5:"fri",6:"sat",0:"sun" };
 
 export const WORKOUTS = {
-
   mon: {
     label:"Monday", name:"Boxing", subtitle:"Skill + Conditioning", color:"#576574",
     sections:[
       { title:"Session", exercises:[
-        { name:"Boxing Training", sets:1, target:"Full session", note:"Combinations, footwork, bag work or sparring. Upper body and core dominant.", rest:0 },
-        { name:"Post-Session Foam Roll", sets:1, target:"8 min", note:"Shoulders, forearms, lats, hips. Prioritize what's tight.", rest:0 },
+        { name:"Boxing Training", sets:1, target:"Full session", note:"Combinations, footwork, bag work or sparring. Upper body and core dominant.", rest:0, tags:["push","pull","core","bodyweight","explosive"] },
+        { name:"Post-Session Foam Roll", sets:1, target:"8 min", note:"Shoulders, forearms, lats, hips. Prioritize what's tight.", rest:0, tags:["recovery","bodyweight"] },
       ]},
     ]
   },
@@ -18,24 +17,24 @@ export const WORKOUTS = {
     label:"Tuesday", name:"Sprints", subtitle:"Dedicated Speed Day", color:"#27ae60",
     sections:[
       { title:"Dynamic Warm-Up", exercises:[
-        { name:"Easy Jog", sets:1, target:"3 min", note:"Get the legs warm — don't skip this.", rest:0 },
-        { name:"A-Skips", sets:2, target:"20 yards", note:"Paw the ground back under the hip, arm drive matches the leg.", rest:30 },
-        { name:"Build-Up Accelerations", sets:3, target:"20 yards @ 65%", note:"Each rep a little faster — mechanics before max effort.", rest:45 },
+        { name:"Easy Jog", sets:1, target:"3 min", note:"Get the legs warm — don't skip this.", rest:0, tags:["sprint","bodyweight","warmup"] },
+        { name:"A-Skips", sets:2, target:"20 yards", note:"Paw the ground back under the hip, arm drive matches the leg.", rest:30, tags:["sprint","bodyweight","plyo","warmup"] },
+        { name:"Build-Up Accelerations", sets:3, target:"20 yards @ 65%", note:"Each rep a little faster — mechanics before max effort.", rest:45, tags:["sprint","bodyweight","explosive","warmup"] },
       ]},
       { title:"Phase 1 Protocol", exercises:[
-        { name:"100m Sprint @ 75%", sets:6, target:"1 rep", note:"Walk back every rep — full recovery between reps is what makes these quality, not grinding through short rest.", rest:90 },
-        { name:"40m Acceleration @ 85%", sets:4, target:"1 rep", note:"Drive the arms hard — 90° bend, drive back not across the body. Shin angle forward at the start.", rest:60 },
+        { name:"100m Sprint @ 75%", sets:6, target:"1 rep", note:"Walk back every rep — full recovery is what makes these quality.", rest:90, tags:["sprint","bodyweight","explosive","bilateral"] },
+        { name:"40m Acceleration @ 85%", sets:4, target:"1 rep", note:"Drive the arms hard — 90° bend, drive back not across.", rest:60, tags:["sprint","bodyweight","explosive","bilateral"] },
       ]},
       { title:"Phase 2 Protocol", exercises:[
-        { name:"100m Sprint @ 85%", sets:8, target:"1 rep", note:"75 sec rest between reps.", rest:75 },
-        { name:"50m Fly Sprint", sets:4, target:"1 rep", note:"Rolling start — hit max velocity at the 20m mark, hold it through the finish.", rest:90 },
-        { name:"40m Sprint @ 95%", sets:4, target:"1 rep", note:"Standing start, maximum acceleration intent.", rest:90 },
+        { name:"100m Sprint @ 85%", sets:8, target:"1 rep", note:"75 sec rest between reps.", rest:75, tags:["sprint","bodyweight","explosive","bilateral"] },
+        { name:"50m Fly Sprint", sets:4, target:"1 rep", note:"Rolling start — hit max velocity at the 20m mark.", rest:90, tags:["sprint","bodyweight","explosive","bilateral"] },
+        { name:"40m Sprint @ 95%", sets:4, target:"1 rep", note:"Standing start, maximum acceleration intent.", rest:90, tags:["sprint","bodyweight","explosive","bilateral"] },
       ]},
       { title:"Phase 3 Protocol", exercises:[
-        { name:"100m Sprint @ 90%", sets:10, target:"1 rep", note:"60 sec rest. This is where conditioning meets speed.", rest:60 },
-        { name:"50m Fly @ 100%", sets:6, target:"1 rep", note:"Absolute max velocity — 2 min rest, don't shortchange it.", rest:120 },
-        { name:"20m Max Acceleration", sets:4, target:"1 rep", note:"Dead stop start, 100% effort — 2 min rest.", rest:120 },
-        { name:"150m Build-Up Run", sets:2, target:"1 rep", note:"60% building to 100% over the full distance — trains speed endurance.", rest:120 },
+        { name:"100m Sprint @ 90%", sets:10, target:"1 rep", note:"60 sec rest. This is where conditioning meets speed.", rest:60, tags:["sprint","bodyweight","explosive","bilateral"] },
+        { name:"50m Fly @ 100%", sets:6, target:"1 rep", note:"Absolute max velocity — 2 min rest.", rest:120, tags:["sprint","bodyweight","explosive","bilateral"] },
+        { name:"20m Max Acceleration", sets:4, target:"1 rep", note:"Dead stop start, 100% effort — 2 min rest.", rest:120, tags:["sprint","bodyweight","explosive","bilateral"] },
+        { name:"150m Build-Up Run", sets:2, target:"1 rep", note:"60% building to 100% — trains speed endurance.", rest:120, tags:["sprint","bodyweight","explosive","bilateral"] },
       ]},
     ]
   },
@@ -44,282 +43,236 @@ export const WORKOUTS = {
     label:"Wednesday", name:"Boxing", subtitle:"Skill + Conditioning", color:"#576574",
     sections:[
       { title:"Session", exercises:[
-        { name:"Boxing Training", sets:1, target:"Full session", note:"Combinations, defensive work, sparring or heavy bag. Mid-week conditioning focus.", rest:0 },
-        { name:"Post-Session Foam Roll", sets:1, target:"8 min", note:"Shoulders, forearms, upper back, hips.", rest:0 },
+        { name:"Boxing Training", sets:1, target:"Full session", note:"Combinations, defensive work, sparring or heavy bag.", rest:0, tags:["push","pull","core","bodyweight","explosive"] },
+        { name:"Post-Session Foam Roll", sets:1, target:"8 min", note:"Shoulders, forearms, upper back, hips.", rest:0, tags:["recovery","bodyweight"] },
       ]},
     ]
   },
 
-  // TARGET: 75-80 min
   thu: {
     label:"Thursday", name:"Lower A", subtitle:"Quad Dominant + Athletic Power", color:"#e8a838",
     sections:[
-      {
-        title:"Activation",
-        exercises:[
-          { name:"Banded Lateral Walk", sets:2, target:"15 steps/side", note:"The most important direction — activates glute medius which stabilizes every single-leg movement. Keep the band taut, don't let knees cave.", rest:20 },
-          { name:"Hip CARs", sets:2, target:"5 reps/side", note:"Full slow circle of the hip joint — forward 5 then backward 5 each side. Opens the joint capsule, improves ROM for deep squats.", rest:30 },
-          { name:"Frog Stretch Hold", sets:2, target:"30 sec", note:"Groin and adductor prep before any lateral loading.", rest:20 },
-        ]
-      },
-      {
-        title:"Power Primer",
-        exercises:[
-          { name:"Kneeling to Tuck Jump", sets:4, target:"3 reps", note:"Tall kneeling — explode both feet to the floor landing in a squat, immediately drive both knees to chest at peak. Two-part movement: the floor transition is the power expression. Full reset between every rep — max CNS demand.", rest:120 },
-          { name:"Split Stance Jump Switches", sets:3, target:"6 reps/side", note:"Start in a lunge, explode upward, switch legs in air, land in opposite lunge. Reactive hip flexor power. Land softly — the deceleration quality matters as much as the jump.", rest:90 },
-        ]
-      },
-      {
-        title:"Isometrics",
-        exercises:[
-          { name:"Spanish Squat Hold", sets:3, target:"45 sec", note:"Band around a fixed post. Lean back, squat to 90° — band pulls knees forward creating max quad and patellar tendon load. Ph3: go deeper and hold longer.", rest:60 },
-          { name:"Split Stance Hold", sets:3, target:"20 sec/side", note:"Split squat position, hold at the bottom. Hip flexor and quad under simultaneous stretch and load — more specific to the single-leg work that follows than a wall sit. Lock in, no adjusting.", rest:45 },
-        ]
-      },
-      {
-        title:"Quad Strength",
-        exercises:[
-          { name:"Banded Box Squat", sets:4, target:"5 reps", note:"Bands anchored low, looped over the bar. Sit back to box, pause, EXPLODE against band resistance. Band deloads at the bottom, loads hardest at lockout — trains rate of force development for jumping. Ph1: light bands. Ph2–3: drive aggressively.", rest:180 },
-          { name:"Front Squat — Heel Elevated", sets:3, target:"8 reps", note:"2–3 inch plates under heels. Upright torso, knee tracks over toe — maximum quad load with reduced lower back stress. Hits the quad from a different angle than box squat. Tempo applies.", rest:180 },
-          { name:"Bulgarian Split Squat with Rotation", sets:3, target:"10 reps/leg", note:"Rear foot elevated. Hold a DB or plate at chest. At the bottom rotate torso AWAY from the front leg. Anti-rotation core plus quad plus glute in one movement. Tempo on the descent.", rest:120 },
-        ]
-      },
-      {
-        title:"Unilateral + Isolation",
-        exercises:[
-          { name:"Barbell Single-Leg Reverse Lunge", sets:3, target:"10 reps/leg", note:"Barbell on back, step back into lunge, drive through front heel. Unilateral leg strength and hip stability under axial load. Keep front shin vertical.", rest:120 },
-          { name:"Leg Extension", sets:3, target:"15 reps", note:"4 sec eccentric, squeeze at full extension 1 sec. Patellar tendon under direct load — do not skip on Phase 1. Go near-failure on last set.", rest:90 },
-        ]
-      },
-      {
-        title:"Adductors",
-        exercises:[
-          { name:"Side Lunge", sets:3, target:"10 reps/side", note:"Push hips back as you step laterally — feel the inner thigh of the straight leg stretch. The only squat pattern that loads the adductors eccentrically.", rest:90 },
-          { name:"Weighted Copenhagen Plank", sets:3, target:"20 sec/side", note:"Top leg on bench, bottom leg hanging, plate on hip. Adductor and oblique under simultaneous load. Build plate weight progressively week to week.", rest:60 },
-        ]
-      },
-      {
-        title:"Calves + Tibialis",
-        exercises:[
-          { name:"Standing Calf Raise", sets:4, target:"20 reps", note:"3 sec eccentric, 1 sec stretch at the bottom. Full range — heel drops as low as possible. Gastrocnemius.", rest:60 },
-          { name:"Tibialis Raise", sets:3, target:"20 reps", note:"Heels on a step, pull toes up against resistance. Prevents shin splints — non-negotiable with sprinting and boxing footwork. Seated calf is on Lower B.", rest:45 },
-        ]
-      },
-      {
-        title:"Core",
-        exercises:[
-          { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Dead hang. No momentum. Rotate each week: straight leg raises → toes to bar → oblique knee tucks → windshield wipers. Progress through these across the 12 weeks.", rest:60 },
-          { name:"Plank Drags", sets:3, target:"10 reps/side", note:"Push-up plank, KB or plate on the floor beside you. Drag it across your body. Zero hip rotation — the anti-rotation demand is the entire point.", rest:60 },
-        ]
-      },
+      { title:"Activation", exercises:[
+        { name:"Banded Lateral Walk", sets:2, target:"15 steps/side", note:"Most important direction — activates glute medius which stabilizes every single-leg movement. Band taut, knees don't cave.", rest:20, tags:["glute","adductor","band","bilateral","warmup"] },
+        { name:"Hip CARs", sets:2, target:"5 reps/side", note:"Full slow circle of the hip joint — forward then backward. Opens the joint capsule, improves ROM for deep squats.", rest:30, tags:["hip","bodyweight","unilateral","warmup"] },
+        { name:"Frog Stretch Hold", sets:2, target:"30 sec", note:"Groin and adductor prep before any lateral loading.", rest:20, tags:["adductor","bodyweight","iso","warmup"] },
+      ]},
+      { title:"Power Primer", exercises:[
+        { name:"Kneeling to Tuck Jump", sets:4, target:"3 reps", note:"Tall kneeling — explode both feet to floor landing in squat, immediately drive both knees to chest at peak. Full reset between every rep — max CNS demand.", rest:120, tags:["quad","glute","plyo","bodyweight","explosive","bilateral"] },
+        { name:"Split Stance Jump Switches", sets:3, target:"6 reps/side", note:"Lunge position, explode upward, switch legs in air, land in opposite lunge. Reactive hip flexor power. Land soft — deceleration quality matters.", rest:90, tags:["quad","glute","plyo","bodyweight","explosive","unilateral"] },
+      ]},
+      { title:"Isometrics", exercises:[
+        { name:"Spanish Squat Hold", sets:3, target:"45 sec", note:"Band around a fixed post, lean back, squat to 90° — band pulls knees forward creating max quad and patellar tendon load. Ph3: go deeper.", rest:60, tags:["quad","band","iso","bilateral"] },
+        { name:"Split Stance Hold", sets:3, target:"20 sec/side", note:"Split squat position held at the bottom — hip flexor and quad under simultaneous stretch and load. Lock in, no adjusting.", rest:45, tags:["quad","hip","bodyweight","iso","unilateral"] },
+      ]},
+      { title:"Quad Strength", exercises:[
+        { name:"Banded Box Squat", sets:4, target:"5 reps", note:"Bands anchored low, looped over bar. Sit back to box, pause, EXPLODE against band resistance. Trains rate of force development for jumping.", rest:180, tags:["quad","glute","barbell","band","squat","compound","bilateral","explosive"] },
+        { name:"Front Squat — Heel Elevated", sets:3, target:"8 reps", note:"2–3 inch plates under heels. Upright torso, knee tracks over toe — max quad load with reduced lower back stress. Tempo applies.", rest:180, tags:["quad","barbell","squat","compound","bilateral"] },
+        { name:"Bulgarian Split Squat with Rotation", sets:3, target:"10 reps/leg", note:"Rear foot elevated, hold DB at chest, rotate torso AWAY from front leg at the bottom. Anti-rotation core plus quad plus glute.", rest:120, tags:["quad","glute","core","dumbbell","lunge","compound","unilateral"] },
+      ]},
+      { title:"Unilateral + Isolation", exercises:[
+        { name:"Barbell Single-Leg Reverse Lunge", sets:3, target:"10 reps/leg", note:"Barbell on back, step back into lunge, drive through front heel. Unilateral leg strength and hip stability under axial load.", rest:120, tags:["quad","glute","barbell","lunge","compound","unilateral"] },
+        { name:"Leg Extension", sets:3, target:"15 reps", note:"4 sec eccentric, squeeze at full extension 1 sec. Patellar tendon under direct load.", rest:90, tags:["quad","machine","isolation","bilateral"] },
+      ]},
+      { title:"Adductors", exercises:[
+        { name:"Side Lunge", sets:3, target:"10 reps/side", note:"Push hips back as you step laterally — feel the inner thigh of the straight leg stretch. Only squat pattern that loads adductors eccentrically.", rest:90, tags:["adductor","quad","glute","bodyweight","lunge","compound","unilateral"] },
+        { name:"Weighted Copenhagen Plank", sets:3, target:"20 sec/side", note:"Top leg on bench, bottom leg hanging, plate on hip. Adductor and oblique under simultaneous load.", rest:60, tags:["adductor","core","bodyweight","iso","unilateral"] },
+      ]},
+      { title:"Calves + Tibialis", exercises:[
+        { name:"Standing Calf Raise", sets:4, target:"20 reps", note:"3 sec eccentric, 1 sec stretch at bottom. Full range — heel drops as low as possible. Gastrocnemius.", rest:60, tags:["calf","machine","isolation","bilateral"] },
+        { name:"Tibialis Raise", sets:3, target:"20 reps", note:"Heels on step, pull toes up against resistance. Prevents shin splints — non-negotiable with sprinting and boxing footwork.", rest:45, tags:["calf","bodyweight","isolation","bilateral"] },
+      ]},
+      { title:"Core", exercises:[
+        { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Dead hang, no momentum. Rotate each week: straight raises → toes to bar → oblique knee tucks → windshield wipers.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
+        { name:"Plank Drags", sets:3, target:"10 reps/side", note:"Push-up plank, drag KB across body. Zero hip rotation — anti-rotation demand is the entire point.", rest:60, tags:["core","kettlebell","iso","unilateral"] },
+      ]},
     ]
   },
 
-  // TARGET: 75-80 min
   fri: {
     label:"Friday", name:"Upper A", subtitle:"Chest + Back Heavy", color:"#2980b9",
     sections:[
-      {
-        title:"Activation",
-        exercises:[
-          { name:"Band Pull-Aparts", sets:3, target:"15 reps", note:"Arms straight, pull band to chest level. Rear delt and mid-trap activation — the single most important pre-press movement.", rest:30 },
-          { name:"Dead Hang", sets:2, target:"20 sec", note:"Full bodyweight hang. Decompresses the shoulder joint, activates lats passively. Creates proper shoulder positioning before pressing.", rest:30 },
-          { name:"Slow Controlled Single-Arm DB Row", sets:3, target:"8 reps/side", note:"3 sec down, pause at stretch, 2 sec pull. Light weight. Activates the lat and mid-back with actual movement before loading them.", rest:45 },
-        ]
-      },
-      {
-        title:"Power Primer",
-        exercises:[
-          { name:"Hang Clean High Pull", sets:4, target:"4 reps", note:"Bar at mid-thigh. Aggressive hip extension — triple extension of ankle, knee, and hip simultaneously. Shrug hard, pull bar to sternum height with elbows high and wide. This is a hip power movement, not a bicep curl. Primes every pulling muscle before back work.", rest:120 },
-          { name:"Plyo Push-Ups", sets:3, target:"6 reps", note:"Hands leave the floor. Lower under control, explode upward. Reset each rep. Upper body rate of force development.", rest:60 },
-        ]
-      },
-      {
-        title:"Isometrics",
-        exercises:[
-          { name:"Wall Chest Push", sets:3, target:"30 sec", note:"Arms at 90°, push maximally into wall. Chest and tricep tendon loading before pressing.", rest:60 },
-          { name:"Dead Hang", sets:3, target:"30 sec", note:"Lat and bicep tendon loading before pulling.", rest:60 },
-        ]
-      },
-      {
-        title:"Chest — Heavy Compounds",
-        exercises:[
-          { name:"Incline Barbell Press", sets:4, target:"8 reps", note:"30–45° incline. Upper chest and front delt. Don't exceed 45° — steeper becomes shoulder press. Tempo applies.", rest:180 },
-          { name:"Flat Barbell Bench Press", sets:4, target:"8 reps", note:"Primary chest mass builder. Pause at the bottom every rep — eliminates bounce, increases pec loading. Tempo applies.", rest:180 },
-        ]
-      },
-      {
-        title:"Back — Heavy Compounds",
-        exercises:[
-          { name:"Weighted Pull-Ups", sets:4, target:"8 reps", note:"Full dead hang at the bottom of every rep. No half reps, no kipping. Most complete lat and upper back exercise that exists.", rest:180 },
-          { name:"Barbell Bent-Over Row", sets:4, target:"10 reps", note:"Hinge to 45° and hold it — no standing up between reps. Drive elbows back past the torso. Tempo applies.", rest:180 },
-        ]
-      },
-      {
-        title:"Accessories",
-        exercises:[
-          { name:"Incline DB Fly", sets:3, target:"12 reps", note:"Slow eccentric — feel every fiber of the upper pec lengthen. Don't let arms drop too low.", rest:90 },
-          { name:"Lat Pullover", sets:3, target:"12 reps", note:"DB held in both hands, lower behind head with soft elbows — full lat stretch. Pull back over chest. Full lat range no other exercise provides.", rest:90 },
-          { name:"Barbell Shrug", sets:3, target:"15 reps", note:"Hold 1 sec at top. Straight up, straight down — no rolling.", rest:90 },
-        ]
-      },
-      {
-        title:"Rotator Cuff",
-        exercises:[
-          { name:"Band External Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Critical with boxing twice a week — shoulder longevity depends on this.", rest:45 },
-          { name:"Band Internal Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Balance both directions.", rest:45 },
-        ]
-      },
+      { title:"Activation", exercises:[
+        { name:"Band Pull-Aparts", sets:3, target:"15 reps", note:"Arms straight, pull band to chest. Rear delt and mid-trap activation — most important pre-press movement.", rest:30, tags:["shoulder","back","band","isolation","bilateral","warmup"] },
+        { name:"Dead Hang", sets:2, target:"20 sec", note:"Full bodyweight hang. Decompresses shoulder joint, activates lats passively.", rest:30, tags:["back","bodyweight","iso","bilateral","warmup"] },
+        { name:"Slow Controlled Single-Arm DB Row", sets:3, target:"8 reps/side", note:"3 sec down, pause at stretch, 2 sec pull. Light weight — activates lat and mid-back before loading them.", rest:45, tags:["back","dumbbell","pull","isolation","unilateral","warmup"] },
+      ]},
+      { title:"Power Primer", exercises:[
+        { name:"Hang Clean High Pull", sets:4, target:"4 reps", note:"Bar at mid-thigh. Aggressive triple extension — ankle, knee, hip simultaneously. Shrug hard, pull bar to sternum with elbows high and wide. Hip power not bicep curl.", rest:120, tags:["back","shoulder","trap","barbell","pull","compound","bilateral","explosive"] },
+        { name:"Plyo Push-Ups", sets:3, target:"6 reps", note:"Hands leave the floor. Lower under control, explode upward. Reset each rep.", rest:60, tags:["chest","shoulder","tricep","bodyweight","push","compound","bilateral","explosive"] },
+      ]},
+      { title:"Isometrics", exercises:[
+        { name:"Wall Chest Push", sets:3, target:"30 sec", note:"Arms at 90°, push maximally into wall. Chest and tricep tendon loading before pressing.", rest:60, tags:["chest","tricep","bodyweight","iso","bilateral"] },
+        { name:"Dead Hang", sets:3, target:"30 sec", note:"Lat and bicep tendon loading before pulling.", rest:60, tags:["back","bicep","bodyweight","iso","bilateral"] },
+      ]},
+      { title:"Chest — Heavy Compounds", exercises:[
+        { name:"Incline Barbell Press", sets:4, target:"8 reps", note:"30–45° incline. Upper chest and front delt. Don't exceed 45°. Tempo applies.", rest:180, tags:["chest","shoulder","tricep","barbell","push","compound","bilateral"] },
+        { name:"Flat Barbell Bench Press", sets:4, target:"8 reps", note:"Primary chest mass builder. Pause at bottom every rep. Tempo applies.", rest:180, tags:["chest","shoulder","tricep","barbell","push","compound","bilateral"] },
+      ]},
+      { title:"Back — Heavy Compounds", exercises:[
+        { name:"Weighted Pull-Ups", sets:4, target:"8 reps", note:"Full dead hang at the bottom every rep. No half reps, no kipping.", rest:180, tags:["back","bicep","bodyweight","pull","compound","bilateral"] },
+        { name:"Barbell Bent-Over Row", sets:4, target:"10 reps", note:"Hinge to 45° and hold — no standing up. Drive elbows back past torso. Tempo applies.", rest:180, tags:["back","bicep","barbell","pull","compound","bilateral"] },
+      ]},
+      { title:"Accessories", exercises:[
+        { name:"Incline DB Fly", sets:3, target:"12 reps", note:"Slow eccentric — feel every fiber of upper pec lengthen. Don't let arms drop too low.", rest:90, tags:["chest","dumbbell","push","isolation","bilateral"], superset:"ss_chest_back_a" },
+        { name:"Lat Pullover", sets:3, target:"12 reps", note:"DB held in both hands, lower behind head with soft elbows — full lat stretch. Pull back over chest.", rest:90, tags:["back","chest","dumbbell","pull","isolation","bilateral"], superset:"ss_chest_back_a" },
+        { name:"Barbell Shrug", sets:3, target:"15 reps", note:"Hold 1 sec at top. Straight up, straight down — no rolling.", rest:90, tags:["trap","barbell","pull","isolation","bilateral"] },
+      ]},
+      { title:"Rotator Cuff", exercises:[
+        { name:"Band External Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Critical with boxing twice a week.", rest:45, tags:["shoulder","band","isolation","unilateral"] },
+        { name:"Band Internal Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Balance both directions.", rest:45, tags:["shoulder","band","isolation","unilateral"] },
+      ]},
     ]
   },
 
-  // TARGET: 80-85 min
   sat: {
     label:"Saturday", name:"Lower B", subtitle:"Posterior Chain + Vertical + Athletic", color:"#c0392b",
     sections:[
-      {
-        title:"Activation",
-        exercises:[
-          { name:"Banded Lateral Walk", sets:2, target:"15 steps/side", note:"Same as Lower A — glute medius activation is critical before any posterior chain loading.", rest:20 },
-          { name:"Hip Flexor Stretch", sets:2, target:"45 sec/side", note:"Kneeling lunge. Opens hip extension range for deadlifts and jumps. Posterior pelvic tilt to deepen the stretch.", rest:20 },
-          { name:"Glute Bridge Hold", sets:2, target:"10 reps + 5 sec hold", note:"Drive up and squeeze hard at the top for 5 seconds each rep. Glute activation before loading them.", rest:30 },
-        ]
-      },
-      {
-        title:"Power Primer",
-        exercises:[
-          { name:"Kettlebell Snatch", sets:4, target:"5 reps/side", note:"Hike KB back, drive hips forward explosively, punch overhead in one motion. Hip snap is everything — not a shoulder press. Develops the posterior chain power that transfers directly to sprinting and jumping. Ph1: nail the mechanics. Ph2–3: add load.", rest:120 },
-          { name:"Lateral Hop Single-Leg Tuck Jump", sets:3, target:"4 reps/side", note:"Lateral hop landing on one foot — immediately jump vertically driving both knees to chest. Lateral reactive ability plus vertical power. The single-leg landing is where the athletic adaptation happens. Land soft, absorb, explode.", rest:120 },
-        ]
-      },
-      {
-        title:"Vertical Jump Protocol",
-        exercises:[
-          { name:"Approach Jump Practice", sets:4, target:"5 reps", note:"2–3 step approach. Gather step — hinge hips, load glutes. Arm swing generates 10–15% of jump height, drive it aggressively. Full reset between every rep — this is skill practice not conditioning.", rest:120 },
-          { name:"Broad Jumps", sets:3, target:"5 reps", note:"Max horizontal distance. Full hip extension, aggressive arm drive, land and absorb. Same hip extension pattern as sprinting.", rest:120 },
-          { name:"Depth Jump to Max Reach", sets:3, target:"5 reps", note:"Ph2–3 only. Step off box, land, explode immediately — ground contact under 0.2 seconds. Trains reactive strength.", rest:120 },
-        ]
-      },
-      {
-        title:"Isometrics",
-        exercises:[
-          { name:"RDL Hold at Mid-Shin", sets:3, target:"30 sec", note:"50% load — hold the hinge position at mid-shin. Hamstring and posterior knee tendon loading before heavy work. Uncomfortable — that's intentional.", rest:60 },
-        ]
-      },
-      {
-        title:"Posterior Chain Strength",
-        exercises:[
-          { name:"Nordic Curls", sets:3, target:"6 reps", note:"Ph2–3 only — do these FIRST while hamstrings are completely fresh. Kneel on pad, anchor feet, lower your body using hamstring eccentric control as slowly as possible. Most effective hamstring exercise for both strength and injury prevention.", rest:120 },
-          { name:"Trap Bar Deadlift", sets:4, target:"5 reps", note:"Primary strength driver today. No squats on this day — spine is fully recovered from Thursday. Controlled descent, explosive hip drive.", rest:180 },
-          { name:"Romanian Deadlift", sets:4, target:"10 reps", note:"Hamstring hypertrophy after the heavy hinge. Feel the full stretch at the bottom every rep. Tempo applies.", rest:180 },
-          { name:"Barbell Hip Thrust", sets:4, target:"12 reps", note:"Squeeze plus 1 sec hold at the top every single rep. Primary glute hypertrophy exercise.", rest:120 },
-          { name:"Seated Leg Curl", sets:4, target:"12 reps", note:"3 sec eccentric. The slow lowering is what drives hamstring hypertrophy — do not rush it.", rest:90 },
-        ]
-      },
-      {
-        title:"Adductors",
-        exercises:[
-          { name:"Adductor Machine", sets:3, target:"15 reps", note:"3 sec eccentric opening — the lengthening is where the adaptation happens. Full range of motion.", rest:90 },
-          { name:"Copenhagen Plank", sets:3, target:"25 sec/side", note:"Top leg on bench, bottom leg hanging. Groin injury prevention — evidence-backed and non-negotiable.", rest:60 },
-        ]
-      },
-      {
-        title:"Conditioning Finisher",
-        exercises:[
-          { name:"Sled Sprint Carry", sets:4, target:"20 yards", note:"Lean in, drive the knees, big arm swing. Leg power plus conditioning simultaneously. Ph1: light load, mechanics. Ph2: moderate, controlled aggression. Ph3: heavy, max effort. 90 sec rest between sets.", rest:90 },
-        ]
-      },
+      { title:"Activation", exercises:[
+        { name:"Banded Lateral Walk", sets:2, target:"15 steps/side", note:"Same as Lower A — glute medius activation before any posterior chain loading.", rest:20, tags:["glute","adductor","band","bilateral","warmup"] },
+        { name:"Hip Flexor Stretch", sets:2, target:"45 sec/side", note:"Kneeling lunge. Opens hip extension range for deadlifts and jumps. Posterior pelvic tilt to deepen.", rest:20, tags:["hip","bodyweight","iso","unilateral","warmup"] },
+        { name:"Glute Bridge Hold", sets:2, target:"10 reps + 5 sec hold", note:"Drive up and squeeze hard at top for 5 seconds each rep. Glute activation before loading them.", rest:30, tags:["glute","hamstring","bodyweight","iso","bilateral","warmup"] },
+      ]},
+      { title:"Power Primer", exercises:[
+        { name:"Kettlebell Snatch", sets:4, target:"5 reps/side", note:"Hike KB back, drive hips forward explosively, punch overhead in one motion. Hip snap — not a shoulder press. Develops posterior chain power for sprinting and jumping.", rest:120, tags:["glute","hamstring","shoulder","kettlebell","hinge","compound","unilateral","explosive"] },
+        { name:"Lateral Hop Single-Leg Tuck Jump", sets:3, target:"4 reps/side", note:"Lateral hop landing on one foot — immediately jump vertically driving both knees to chest. Lateral reactive ability plus vertical power.", rest:120, tags:["quad","glute","plyo","bodyweight","explosive","unilateral"] },
+      ]},
+      { title:"Vertical Jump Protocol", exercises:[
+        { name:"Approach Jump Practice", sets:4, target:"5 reps", note:"2–3 step approach. Gather step, hinge hips, load glutes. Arm swing generates 10–15% of jump height. Full reset between every rep — skill practice.", rest:120, tags:["quad","glute","plyo","bodyweight","explosive","bilateral"] },
+        { name:"Broad Jumps", sets:3, target:"5 reps", note:"Max horizontal distance. Full hip extension, aggressive arm drive, land and absorb.", rest:120, tags:["quad","glute","hamstring","plyo","bodyweight","explosive","bilateral"] },
+        { name:"Depth Jump to Max Reach", sets:3, target:"5 reps", note:"Ph2–3 only. Step off box, land, explode immediately — ground contact under 0.2 seconds.", rest:120, tags:["quad","glute","plyo","bodyweight","explosive","bilateral","box"] },
+      ]},
+      { title:"Isometrics", exercises:[
+        { name:"RDL Hold at Mid-Shin", sets:3, target:"30 sec", note:"50% load — hold hinge position at mid-shin. Hamstring and posterior knee tendon loading before heavy work.", rest:60, tags:["hamstring","barbell","hinge","iso","bilateral"] },
+      ]},
+      { title:"Posterior Chain Strength", exercises:[
+        { name:"Nordic Curls", sets:3, target:"6 reps", note:"Ph2–3 only. Do FIRST while hamstrings are completely fresh. Kneel on pad, anchor feet, lower body using hamstring eccentric control as slowly as possible.", rest:120, tags:["hamstring","bodyweight","hinge","compound","bilateral"] },
+        { name:"Trap Bar Deadlift", sets:4, target:"5 reps", note:"Primary strength driver today. No squats — spine is fully recovered from Thursday. Controlled descent, explosive hip drive.", rest:180, tags:["hamstring","glute","back","barbell","hinge","compound","bilateral"] },
+        { name:"Romanian Deadlift", sets:4, target:"10 reps", note:"Hamstring hypertrophy after the heavy hinge. Feel full stretch at bottom every rep. Tempo applies.", rest:180, tags:["hamstring","glute","barbell","hinge","compound","bilateral"] },
+        { name:"Barbell Hip Thrust", sets:4, target:"12 reps", note:"Squeeze plus 1 sec hold at top every rep. Primary glute hypertrophy exercise.", rest:120, tags:["glute","hamstring","barbell","compound","bilateral"] },
+        { name:"Seated Leg Curl", sets:4, target:"12 reps", note:"3 sec eccentric. The slow lowering is what drives hamstring hypertrophy.", rest:90, tags:["hamstring","machine","isolation","bilateral"] },
+      ]},
+      { title:"Adductors", exercises:[
+        { name:"Adductor Machine", sets:3, target:"15 reps", note:"3 sec eccentric opening — the lengthening is where the adaptation happens. Full range.", rest:90, tags:["adductor","machine","isolation","bilateral"] },
+        { name:"Copenhagen Plank", sets:3, target:"25 sec/side", note:"Top leg on bench, bottom leg hanging. Groin injury prevention — evidence-backed.", rest:60, tags:["adductor","core","bodyweight","iso","unilateral"] },
+      ]},
+      { title:"Conditioning Finisher", exercises:[
+        { name:"Sled Sprint Carry", sets:4, target:"20 yards", note:"Lean in, drive the knees, big arm swing. Ph1: light load, mechanics. Ph2: moderate, controlled aggression. Ph3: heavy, max effort. 90 sec rest.", rest:90, tags:["quad","glute","hamstring","sled","compound","bilateral","explosive"] },
+      ]},
     ]
   },
 
-  // TARGET: 80-85 min
   sun: {
     label:"Sunday", name:"Upper B", subtitle:"Shoulders + Arms + Athletic Detail", color:"#8e44ad",
     sections:[
-      {
-        title:"Activation",
-        exercises:[
-          { name:"Band Pull-Aparts", sets:3, target:"15 reps", note:"Rear delt and rotator cuff activation. Four days since last boxing — shoulders still benefit from activation work before loading them.", rest:30 },
-          { name:"Band External Rotation", sets:2, target:"15 reps/arm", note:"Elbow at side — rotator cuff warm-up before heavy overhead pressing.", rest:30 },
-        ]
-      },
-      {
-        title:"Power Primer",
-        exercises:[
-          { name:"Med Ball Overhead Slam", sets:3, target:"6 reps", note:"Full extension overhead, slam down through the floor. Posterior chain activation and shoulder prep in one.", rest:60 },
-          { name:"Plyo Push-Ups", sets:3, target:"6 reps", note:"Upper body rate of force development. Hands leave the floor. Reset each rep.", rest:60 },
-        ]
-      },
-      {
-        title:"Isometrics",
-        exercises:[
-          { name:"OHP Lockout Hold", sets:3, target:"20 sec", note:"60% of working weight, pressed overhead, hold at lockout. Shoulder tendon loading before the heavy press.", rest:60 },
-        ]
-      },
-      {
-        title:"Shoulder — Compound",
-        exercises:[
-          { name:"Overhead Press", sets:4, target:"10 reps", note:"Tempo applies. Front delt primary, full shoulder stability. Brace the core hard — don't let the lower back extend.", rest:180 },
-          { name:"Face Pulls", sets:3, target:"15 reps", note:"Rope at face height — pull to face with external rotation at the end, elbows finishing behind the bar. Done before lateral raises to prime the rear delt and rotator cuff.", rest:60 },
-        ]
-      },
-      {
-        title:"Shoulder — Isolation",
-        exercises:[
-          { name:"DB Lateral Raise", sets:3, target:"15 reps", note:"2 sec up, 3 sec down. Lead with the elbow. Pinky slightly higher than thumb at top. No swinging — if you're swinging it's too heavy.", rest:60 },
-          { name:"Rear Delt DB Fly", sets:4, target:"15 reps", note:"Chest parallel to floor. Slow eccentric, zero momentum. Keep the weight light enough to feel the rear delt working — most people go too heavy.", rest:60 },
-          { name:"Cable Lateral Raise", sets:3, target:"15 reps/side", note:"Low pulley — constant tension eliminates the dead spot of the DB version. Interleaved after rear delt work so the lateral head isn't pre-exhausted.", rest:60 },
-          { name:"Reverse Pec Deck", sets:3, target:"15 reps", note:"Squeeze hard at full extension — rear delt peak contraction.", rest:60 },
-        ]
-      },
-      {
-        title:"Second Chest Stimulus",
-        exercises:[
-          { name:"Pec Deck / Machine Fly", sets:3, target:"12 reps", note:"Constant tension, mid-chest squeeze. Second chest hit this week — isolation work, not compound.", rest:90 },
-          { name:"Chest Dips", sets:2, target:"To Failure", note:"Forward lean, elbows slightly flared. Full pec stretch at the bottom. Lower chest primary. Bodyweight so recovery cost is minimal.", rest:60 },
-        ]
-      },
-      {
-        title:"Back Detail",
-        exercises:[
-          { name:"Seated Cable Row", sets:3, target:"12 reps", note:"Full forward lean at the stretch, drive elbows past the torso on the pull. Mid-back and lat thickness.", rest:90 },
-          { name:"Lat Pullover", sets:3, target:"12 reps", note:"Second hit this week. DB or cable — full lat lengthening behind the head, pull back over chest.", rest:90 },
-        ]
-      },
-      {
-        title:"Triceps",
-        exercises:[
-          { name:"Close-Grip Bench Press", sets:3, target:"10 reps", note:"Hands shoulder-width. Hits all three heads — best tricep mass builder.", rest:120 },
-          { name:"Overhead Tricep Extension", sets:3, target:"12 reps", note:"Arms overhead — long head of tricep maximally stretched. The long head is the biggest head and this is its primary exercise.", rest:90 },
-          { name:"Underhand Tricep Pushdown", sets:3, target:"15 reps", note:"Reverse grip on cable bar — medial head emphasis. Different angle from overhead extension.", rest:60 },
-        ]
-      },
-      {
-        title:"Biceps",
-        exercises:[
-          { name:"Slow Controlled Barbell Curl", sets:3, target:"10 reps", note:"4 sec eccentric, 1 sec pause at stretch, 2 sec concentric. No swinging. The slow eccentric is what drives hypertrophy — weight will be lighter than your normal curl.", rest:90 },
-          { name:"Incline DB Curl", sets:3, target:"12 reps", note:"45° bench, arm hangs behind the body at full extension. Maximum long head stretch — the behind-the-body arm position is what separates this from a standard DB curl.", rest:90 },
-          { name:"Hammer Curl", sets:3, target:"12 reps", note:"Neutral grip. Brachialis and forearm thickness — makes the arm look bigger from every angle.", rest:60 },
-        ]
-      },
-      {
-        title:"Forearms + Core",
-        exercises:[
-          { name:"Reverse Curl (EZ Bar)", sets:3, target:"12 reps", note:"Overhand grip — brachioradialis emphasis, thickness above the wrist.", rest:60 },
-          { name:"Farmer Carry", sets:3, target:"30 sec", note:"Heavy DBs. Grip strength for boxing and court. Forearms, traps, and core all working simultaneously.", rest:60 },
-          { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Rotate weekly: straight raises → toes to bar → oblique knee tucks → windshield wipers.", rest:60 },
-        ]
-      },
-      {
-        title:"Rotator Cuff",
-        exercises:[
-          { name:"Band External Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Every upper day ends here — shoulder longevity with boxing in the program.", rest:45 },
-          { name:"Band Internal Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side.", rest:45 },
-        ]
-      },
+      { title:"Activation", exercises:[
+        { name:"Band Pull-Aparts", sets:3, target:"15 reps", note:"Rear delt and rotator cuff activation before pressing.", rest:30, tags:["shoulder","back","band","isolation","bilateral","warmup"] },
+        { name:"Band External Rotation", sets:2, target:"15 reps/arm", note:"Rotator cuff warm-up before heavy overhead pressing.", rest:30, tags:["shoulder","band","isolation","unilateral","warmup"] },
+      ]},
+      { title:"Power Primer", exercises:[
+        { name:"Med Ball Overhead Slam", sets:3, target:"6 reps", note:"Full extension overhead, slam through the floor. Posterior chain activation and shoulder prep.", rest:60, tags:["shoulder","back","core","bodyweight","explosive","bilateral"] },
+        { name:"Plyo Push-Ups", sets:3, target:"6 reps", note:"Hands leave the floor. Reset each rep.", rest:60, tags:["chest","shoulder","tricep","bodyweight","push","compound","bilateral","explosive"] },
+      ]},
+      { title:"Isometrics", exercises:[
+        { name:"OHP Lockout Hold", sets:3, target:"20 sec", note:"60% of working weight, pressed overhead, hold at lockout. Shoulder tendon loading before the heavy press.", rest:60, tags:["shoulder","tricep","barbell","iso","bilateral"] },
+      ]},
+      { title:"Shoulder — Compound", exercises:[
+        { name:"Overhead Press", sets:4, target:"10 reps", note:"Tempo applies. Front delt primary, full shoulder stability. Brace the core hard.", rest:180, tags:["shoulder","tricep","barbell","push","compound","bilateral"] },
+        { name:"Face Pulls", sets:3, target:"15 reps", note:"Rope at face height, pull with external rotation — elbows finishing behind the bar. Done before lateral raises to prime rear delt and rotator cuff.", rest:60, tags:["shoulder","back","cable","pull","isolation","bilateral"] },
+      ]},
+      { title:"Shoulder — Isolation", exercises:[
+        { name:"DB Lateral Raise", sets:3, target:"15 reps", note:"2 sec up, 3 sec down. Lead with elbow, no swinging.", rest:60, tags:["shoulder","dumbbell","push","isolation","bilateral"], superset:"ss_lat_rear" },
+        { name:"Rear Delt DB Fly", sets:4, target:"15 reps", note:"Chest parallel to floor. Slow eccentric, zero momentum. Keep weight light enough to feel rear delt.", rest:60, tags:["shoulder","back","dumbbell","pull","isolation","bilateral"], superset:"ss_lat_rear" },
+        { name:"Cable Lateral Raise", sets:3, target:"15 reps/side", note:"Low pulley — constant tension eliminates dead spot of DB version.", rest:60, tags:["shoulder","cable","push","isolation","unilateral"], superset:"ss_cable_pec" },
+        { name:"Reverse Pec Deck", sets:3, target:"15 reps", note:"Squeeze hard at full extension — rear delt peak contraction.", rest:60, tags:["shoulder","back","machine","pull","isolation","bilateral"], superset:"ss_cable_pec" },
+      ]},
+      { title:"Second Chest Stimulus", exercises:[
+        { name:"Pec Deck / Machine Fly", sets:3, target:"12 reps", note:"Constant tension, mid-chest squeeze. Second chest hit this week.", rest:90, tags:["chest","machine","push","isolation","bilateral"] },
+        { name:"Chest Dips", sets:2, target:"To Failure", note:"Forward lean, elbows slightly flared. Full pec stretch at bottom. Lower chest.", rest:60, tags:["chest","shoulder","tricep","bodyweight","push","compound","bilateral"] },
+      ]},
+      { title:"Back Detail", exercises:[
+        { name:"Seated Cable Row", sets:3, target:"12 reps", note:"Full forward lean, drive elbows past torso. Mid-back and lat thickness.", rest:90, tags:["back","bicep","cable","pull","compound","bilateral"] },
+        { name:"Lat Pullover", sets:3, target:"12 reps", note:"DB or cable — full lat lengthening behind the head, pull back over chest.", rest:90, tags:["back","chest","dumbbell","pull","isolation","bilateral"] },
+      ]},
+      { title:"Triceps", exercises:[
+        { name:"Close-Grip Bench Press", sets:3, target:"10 reps", note:"Hands shoulder-width. Hits all three heads — best tricep mass builder.", rest:120, tags:["tricep","chest","barbell","push","compound","bilateral"] },
+        { name:"Overhead Tricep Extension", sets:3, target:"12 reps", note:"Arms overhead — long head maximally stretched. Most important tricep exercise.", rest:90, tags:["tricep","cable","push","isolation","bilateral"], superset:"ss_tri_bi" },
+        { name:"Incline DB Curl", sets:3, target:"12 reps", note:"45° bench, arm hangs behind body — maximum long head stretch.", rest:90, tags:["bicep","dumbbell","pull","isolation","unilateral"], superset:"ss_tri_bi" },
+        { name:"Underhand Tricep Pushdown", sets:3, target:"15 reps", note:"Reverse grip — medial head emphasis.", rest:60, tags:["tricep","cable","push","isolation","bilateral"] },
+      ]},
+      { title:"Biceps", exercises:[
+        { name:"Slow Controlled Barbell Curl", sets:3, target:"10 reps", note:"4 sec eccentric, 1 sec pause, 2 sec concentric. No swinging.", rest:90, tags:["bicep","barbell","pull","isolation","bilateral"] },
+        { name:"Hammer Curl", sets:3, target:"12 reps", note:"Neutral grip. Brachialis and forearm thickness.", rest:60, tags:["bicep","forearm","dumbbell","pull","isolation","bilateral"] },
+      ]},
+      { title:"Forearms + Core", exercises:[
+        { name:"Reverse Curl (EZ Bar)", sets:3, target:"12 reps", note:"Overhand grip — brachioradialis emphasis.", rest:60, tags:["forearm","bicep","barbell","pull","isolation","bilateral"] },
+        { name:"Farmer Carry", sets:3, target:"30 sec", note:"Heavy DBs. Grip, forearms, traps, and core all working.", rest:60, tags:["forearm","trap","core","dumbbell","carry","compound","bilateral"] },
+        { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Rotate weekly: straight raises → toes to bar → oblique tucks → windshield wipers.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
+      ]},
+      { title:"Rotator Cuff", exercises:[
+        { name:"Band External Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Every upper day ends here.", rest:45, tags:["shoulder","band","isolation","unilateral"] },
+        { name:"Band Internal Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side.", rest:45, tags:["shoulder","band","isolation","unilateral"] },
+      ]},
     ]
   },
 };
+
+// ── FLAT EXERCISE LIBRARY ─────────────────────────────────────────────────
+// Built from all exercises across all workouts — used for the library picker
+// and tag-based swap suggestions. Deduplicated by name.
+const _seen = new Set();
+export const EXERCISE_LIBRARY = [];
+Object.values(WORKOUTS).forEach(day => {
+  day.sections.forEach(sec => {
+    sec.exercises.forEach(ex => {
+      if (!_seen.has(ex.name)) {
+        _seen.add(ex.name);
+        EXERCISE_LIBRARY.push({ ...ex, dayLabel: day.name });
+      }
+    });
+  });
+});
+
+// Additional exercises not in the main program but available in library
+const EXTRA_EXERCISES = [
+  { name:"Goblet Squat", tags:["quad","glute","dumbbell","squat","compound","bilateral"], sets:4, target:"10 reps", rest:120, note:"DB or KB held at chest. Upright torso, deep knee bend." },
+  { name:"Pause Squat", tags:["quad","glute","barbell","squat","compound","bilateral"], sets:4, target:"5 reps", rest:180, note:"Full pause at the bottom for 2 sec — removes stretch reflex." },
+  { name:"Hack Squat Machine", tags:["quad","machine","squat","compound","bilateral"], sets:4, target:"8 reps", rest:150, note:"Machine removes stability demand — pure quad loading." },
+  { name:"Leg Press", tags:["quad","glute","machine","compound","bilateral"], sets:4, target:"12 reps", rest:120, note:"High narrow foot placement for quad emphasis. 3 sec eccentric." },
+  { name:"Walking Lunges", tags:["quad","glute","dumbbell","lunge","compound","bilateral"], sets:3, target:"12 reps/leg", rest:120, note:"Step forward, drive back up and step through." },
+  { name:"Step-Ups", tags:["quad","glute","dumbbell","lunge","compound","unilateral","box"], sets:3, target:"10 reps/leg", rest:120, note:"Box or bench, drive through the heel of the elevated leg." },
+  { name:"Bulgarian Split Squat", tags:["quad","glute","dumbbell","lunge","compound","unilateral"], sets:3, target:"10 reps/leg", rest:120, note:"Rear foot elevated, heavy DBs in each hand." },
+  { name:"Sissy Squat", tags:["quad","bodyweight","squat","isolation","bilateral"], sets:3, target:"12 reps", rest:90, note:"Extreme knee flexion — highest patellar tendon load. 3 sec eccentric." },
+  { name:"Cossack Squat", tags:["adductor","quad","glute","bodyweight","squat","compound","unilateral"], sets:3, target:"8 reps/side", rest:90, note:"Deep lateral lunge — one leg straight, one in deep squat." },
+  { name:"Good Mornings", tags:["hamstring","back","barbell","hinge","compound","bilateral"], sets:3, target:"10 reps", rest:120, note:"Bar on back, hinge forward keeping back flat." },
+  { name:"Conventional Deadlift", tags:["hamstring","glute","back","barbell","hinge","compound","bilateral"], sets:4, target:"5 reps", rest:180, note:"Standard barbell. More hip hinge demand than trap bar." },
+  { name:"Sumo Deadlift", tags:["hamstring","glute","adductor","barbell","hinge","compound","bilateral"], sets:4, target:"5 reps", rest:180, note:"Wide stance, hands inside legs. More adductor involvement." },
+  { name:"Cable Pull-Through", tags:["hamstring","glute","cable","hinge","compound","bilateral"], sets:4, target:"12 reps", rest:120, note:"Low pulley, rope between legs — hip hinge with no axial load." },
+  { name:"Kettlebell Swing", tags:["hamstring","glute","kettlebell","hinge","compound","bilateral","explosive"], sets:4, target:"15 reps", rest:120, note:"Explosive RDL pattern. Hip extension power for jumping and sprinting." },
+  { name:"DB Hip Thrust", tags:["glute","hamstring","dumbbell","compound","bilateral"], sets:4, target:"12 reps", rest:120, note:"Same movement, DBs on hips. Easier to set up." },
+  { name:"Incline DB Press", tags:["chest","shoulder","tricep","dumbbell","push","compound","bilateral"], sets:4, target:"10 reps", rest:150, note:"Deeper stretch at bottom than barbell. Independent arm movement." },
+  { name:"Machine Chest Press", tags:["chest","shoulder","tricep","machine","push","compound","bilateral"], sets:4, target:"12 reps", rest:120, note:"Fixed path — joint-friendly option." },
+  { name:"DB Bench Press", tags:["chest","shoulder","tricep","dumbbell","push","compound","bilateral"], sets:4, target:"10 reps", rest:150, note:"Deeper stretch, independent arm movement." },
+  { name:"Cable Fly — High to Low", tags:["chest","cable","push","isolation","bilateral"], sets:3, target:"12 reps", rest:90, note:"High pulleys, draw hands down and together. Constant tension." },
+  { name:"Lat Pulldown — Wide Grip", tags:["back","bicep","cable","pull","compound","bilateral"], sets:4, target:"10 reps", rest:150, note:"Same pulling pattern as pull-ups, easier to control load." },
+  { name:"DB Bent-Over Row", tags:["back","bicep","dumbbell","pull","compound","unilateral"], sets:4, target:"10 reps/arm", rest:120, note:"Greater range of motion, removes balance demand." },
+  { name:"Pendlay Row", tags:["back","bicep","barbell","pull","compound","bilateral","explosive"], sets:4, target:"6 reps", rest:180, note:"Dead stop on floor each rep — more power development." },
+  { name:"T-Bar Row", tags:["back","bicep","barbell","pull","compound","bilateral"], sets:4, target:"10 reps", rest:150, note:"Mid-back emphasis with neutral grip." },
+  { name:"DB Shoulder Press", tags:["shoulder","tricep","dumbbell","push","compound","bilateral"], sets:4, target:"10 reps", rest:180, note:"Independent arms — deeper range, exposes imbalances." },
+  { name:"Arnold Press", tags:["shoulder","tricep","dumbbell","push","compound","bilateral"], sets:4, target:"10 reps", rest:150, note:"Rotate from palms facing you to palms forward as you press." },
+  { name:"Cable Lateral Raise — Both Arms", tags:["shoulder","cable","push","isolation","bilateral"], sets:3, target:"15 reps", rest:60, note:"Cross cables at low pulley. Constant tension throughout." },
+  { name:"Skull Crushers", tags:["tricep","barbell","push","isolation","bilateral"], sets:3, target:"12 reps", rest:90, note:"EZ bar lowered to forehead — long head under stretch." },
+  { name:"Tricep Dips", tags:["tricep","chest","bodyweight","push","compound","bilateral"], sets:3, target:"To Failure", rest:120, note:"Elbows tucked — tricep emphasis over chest." },
+  { name:"Cable Curl — Slow Eccentric", tags:["bicep","cable","pull","isolation","bilateral"], sets:3, target:"12 reps", rest:90, note:"Low pulley, 4 sec eccentric. Constant tension." },
+  { name:"Preacher Curl", tags:["bicep","barbell","pull","isolation","bilateral"], sets:3, target:"10 reps", rest:90, note:"Upper arm fixed on pad — removes momentum completely." },
+  { name:"Spider Curl", tags:["bicep","dumbbell","pull","isolation","bilateral"], sets:3, target:"12 reps", rest:90, note:"Chest-down on incline bench — no momentum possible." },
+];
+EXTRA_EXERCISES.forEach(ex => {
+  if (!_seen.has(ex.name)) {
+    _seen.add(ex.name);
+    EXERCISE_LIBRARY.push(ex);
+  }
+});
 
 export const TEMPO = {
   1: "3-1-3 (3 sec down, 1 sec pause, 3 sec up)",
@@ -333,98 +286,96 @@ export const PHASE_INFO = {
   3: { name:"Shred & Peak", weeks:"Weeks 7–12", desc:"Deficit nutrition. Isometrics at full length. Max conditioning. Tempo 3-0-1. This is game day you.", color:"#c0392b" },
 };
 
-// ── EXERCISE SWAPS ─────────────────────────────────────────────────────────
+// ── SWAPS (tag-aware) ──────────────────────────────────────────────────────
 export const SWAPS = {
   "Banded Box Squat": [
-    { name:"Pause Squat", sets:4, target:"5 reps", note:"Full pause at the bottom for 2 sec — removes stretch reflex, pure quad strength from a dead stop.", rest:180 },
-    { name:"Goblet Squat", sets:4, target:"10 reps", note:"DB or KB held at chest. Upright torso, deep knee bend. Good when bands aren't available.", rest:120 },
-    { name:"Hack Squat Machine", sets:4, target:"8 reps", note:"Machine removes the stability demand — pure quad loading. Good when lower back is fatigued.", rest:150 },
+    { name:"Pause Squat", sets:4, target:"5 reps", note:"Full pause at bottom for 2 sec — removes stretch reflex, pure quad strength.", rest:180, tags:["quad","glute","barbell","squat","compound","bilateral"] },
+    { name:"Goblet Squat", sets:4, target:"10 reps", note:"DB held at chest, upright torso, deep knee bend. Good when bands aren't available.", rest:120, tags:["quad","glute","dumbbell","squat","compound","bilateral"] },
+    { name:"Hack Squat Machine", sets:4, target:"8 reps", note:"Machine removes stability demand — pure quad loading.", rest:150, tags:["quad","machine","squat","compound","bilateral"] },
   ],
   "Front Squat — Heel Elevated": [
-    { name:"Leg Press", sets:4, target:"12 reps", note:"High and narrow foot placement for quad emphasis. 3 sec eccentric. No lower back involvement.", rest:120 },
-    { name:"Dumbbell Goblet Squat", sets:3, target:"12 reps", note:"Heavy DB at chest, heels elevated on plates. Good front squat substitute when the rack isn't available.", rest:120 },
+    { name:"Leg Press", sets:4, target:"12 reps", note:"High narrow foot placement for quad emphasis. 3 sec eccentric.", rest:120, tags:["quad","glute","machine","compound","bilateral"] },
+    { name:"Goblet Squat", sets:3, target:"12 reps", note:"Heavy DB at chest, heels elevated on plates.", rest:120, tags:["quad","glute","dumbbell","squat","compound","bilateral"] },
   ],
   "Bulgarian Split Squat with Rotation": [
-    { name:"Walking Lunges", sets:3, target:"12 reps/leg", note:"Step forward into lunge, drive back up and step through. Develops rhythm and coordination alongside strength.", rest:120 },
-    { name:"Reverse Lunge", sets:3, target:"10 reps/leg", note:"Step backward — easier on the knees. Same quad and glute demand.", rest:120 },
-    { name:"Step-Ups", sets:3, target:"10 reps/leg", note:"Box or bench, drive through the heel. Unilateral quad and glute without the balance challenge.", rest:120 },
-    { name:"Bulgarian Split Squat", sets:3, target:"10 reps/leg", note:"Standard version without rotation. Heavy DBs in each hand.", rest:120 },
+    { name:"Walking Lunges", sets:3, target:"12 reps/leg", note:"Step forward into lunge, drive back up and step through.", rest:120, tags:["quad","glute","dumbbell","lunge","compound","bilateral"] },
+    { name:"Bulgarian Split Squat", sets:3, target:"10 reps/leg", note:"Standard version without rotation. Heavy DBs.", rest:120, tags:["quad","glute","dumbbell","lunge","compound","unilateral"] },
+    { name:"Reverse Lunge", sets:3, target:"10 reps/leg", note:"Step backward — easier on the knees.", rest:120, tags:["quad","glute","dumbbell","lunge","compound","unilateral"] },
+    { name:"Step-Ups", sets:3, target:"10 reps/leg", note:"Box or bench, drive through the heel.", rest:120, tags:["quad","glute","dumbbell","lunge","compound","unilateral","box"] },
   ],
   "Barbell Single-Leg Reverse Lunge": [
-    { name:"DB Reverse Lunge", sets:3, target:"10 reps/leg", note:"Same movement with DBs — easier to control, less spinal loading.", rest:120 },
-    { name:"Step-Ups with Knee Drive", sets:3, target:"10 reps/leg", note:"Step up, drive the free knee to hip height at the top.", rest:120 },
-    { name:"Split Squat", sets:3, target:"10 reps/leg", note:"Static — both feet stay planted. Simplest single-leg quad exercise.", rest:120 },
+    { name:"DB Reverse Lunge", sets:3, target:"10 reps/leg", note:"Same movement with DBs — less spinal loading.", rest:120, tags:["quad","glute","dumbbell","lunge","compound","unilateral"] },
+    { name:"Step-Ups with Knee Drive", sets:3, target:"10 reps/leg", note:"Step up, drive free knee to hip height at top.", rest:120, tags:["quad","glute","dumbbell","lunge","compound","unilateral","box"] },
+    { name:"Split Squat", sets:3, target:"10 reps/leg", note:"Static — both feet planted. Simplest single-leg quad exercise.", rest:120, tags:["quad","glute","dumbbell","lunge","compound","unilateral"] },
   ],
   "Leg Extension": [
-    { name:"Sissy Squat", sets:3, target:"12 reps", note:"Extreme knee flexion — highest patellar tendon load you can create. 3 sec eccentric, hold at bottom 1 sec. Ph1: partial range.", rest:90 },
-    { name:"Terminal Knee Extension (Band)", sets:3, target:"20 reps/leg", note:"Band around back of knee, drive knee forward against band. VMO loading with minimal joint stress.", rest:60 },
-  ],
-  "Side Lunge": [
-    { name:"Cossack Squat", sets:3, target:"8 reps/side", note:"Deep lateral lunge — one leg straight, one in a deep squat. More range than side lunge.", rest:90 },
-    { name:"Sumo Squat", sets:3, target:"12 reps", note:"Wide stance, toes out. Both adductors load simultaneously. Hold a heavy DB for resistance.", rest:90 },
+    { name:"Sissy Squat", sets:3, target:"12 reps", note:"Extreme knee flexion, highest patellar tendon load. 3 sec eccentric, hold at bottom.", rest:90, tags:["quad","bodyweight","squat","isolation","bilateral"] },
+    { name:"Terminal Knee Extension (Band)", sets:3, target:"20 reps/leg", note:"Band around back of knee, drive knee forward. VMO loading with minimal joint stress.", rest:60, tags:["quad","band","isolation","unilateral"] },
   ],
   "Incline Barbell Press": [
-    { name:"Incline DB Press", sets:4, target:"10 reps", note:"Deeper stretch at the bottom than barbell. Each arm works independently.", rest:150 },
-    { name:"Machine Incline Press", sets:4, target:"12 reps", note:"Fixed path — good when shoulders are sensitive.", rest:120 },
+    { name:"Incline DB Press", sets:4, target:"10 reps", note:"Deeper stretch at bottom. Independent arm movement.", rest:150, tags:["chest","shoulder","tricep","dumbbell","push","compound","bilateral"] },
+    { name:"Machine Incline Press", sets:4, target:"12 reps", note:"Fixed path — good when shoulders are sensitive.", rest:120, tags:["chest","shoulder","tricep","machine","push","compound","bilateral"] },
   ],
   "Flat Barbell Bench Press": [
-    { name:"DB Bench Press", sets:4, target:"10 reps", note:"Deeper stretch, independent arm movement exposes imbalances.", rest:150 },
-    { name:"Machine Chest Press", sets:4, target:"12 reps", note:"Fixed path, joint-friendly.", rest:120 },
-    { name:"Close-Grip Bench Press", sets:4, target:"10 reps", note:"More tricep involvement. Good pressing strength variation.", rest:180 },
+    { name:"DB Bench Press", sets:4, target:"10 reps", note:"Deeper stretch, independent arm movement.", rest:150, tags:["chest","shoulder","tricep","dumbbell","push","compound","bilateral"] },
+    { name:"Machine Chest Press", sets:4, target:"12 reps", note:"Fixed path — joint-friendly.", rest:120, tags:["chest","shoulder","tricep","machine","push","compound","bilateral"] },
+    { name:"Close-Grip Bench Press", sets:4, target:"10 reps", note:"More tricep involvement.", rest:180, tags:["chest","tricep","barbell","push","compound","bilateral"] },
   ],
   "Weighted Pull-Ups": [
-    { name:"Lat Pulldown — Wide Grip", sets:4, target:"10 reps", note:"Same pulling pattern, easier to load and control. Full stretch at the top.", rest:150 },
-    { name:"Assisted Pull-Ups", sets:4, target:"8 reps", note:"Machine assistance — maintains movement pattern at lower bodyweight.", rest:150 },
+    { name:"Lat Pulldown — Wide Grip", sets:4, target:"10 reps", note:"Same pulling pattern, easier to control load.", rest:150, tags:["back","bicep","cable","pull","compound","bilateral"] },
+    { name:"Assisted Pull-Ups", sets:4, target:"8 reps", note:"Machine assistance — maintains movement pattern.", rest:150, tags:["back","bicep","bodyweight","pull","compound","bilateral"] },
   ],
   "Barbell Bent-Over Row": [
-    { name:"DB Bent-Over Row", sets:4, target:"10 reps/arm", note:"Greater range of motion, removes balance demand.", rest:120 },
-    { name:"Pendlay Row", sets:4, target:"6 reps", note:"Dead stop on floor each rep, explosive pull. More power development than standard row.", rest:180 },
-    { name:"Seated Cable Row", sets:4, target:"12 reps", note:"Full forward lean stretch. Constant tension. Lower back stays more neutral.", rest:120 },
+    { name:"DB Bent-Over Row", sets:4, target:"10 reps/arm", note:"Greater range, removes balance demand.", rest:120, tags:["back","bicep","dumbbell","pull","compound","unilateral"] },
+    { name:"Pendlay Row", sets:4, target:"6 reps", note:"Dead stop each rep — more power development.", rest:180, tags:["back","bicep","barbell","pull","compound","bilateral","explosive"] },
+    { name:"Seated Cable Row", sets:4, target:"12 reps", note:"Full forward lean stretch. Constant tension.", rest:120, tags:["back","bicep","cable","pull","compound","bilateral"] },
   ],
   "Nordic Curls": [
-    { name:"Leg Curl — Slow Eccentric", sets:4, target:"10 reps", note:"5 sec eccentric on every rep. Closest substitute to Nordic for hamstring lengthening demand.", rest:120 },
-    { name:"Good Mornings", sets:3, target:"10 reps", note:"Bar on back, hinge forward keeping back flat — loads hamstrings and erectors under load.", rest:120 },
+    { name:"Leg Curl — Slow Eccentric", sets:4, target:"10 reps", note:"5 sec eccentric every rep. Closest substitute for hamstring lengthening demand.", rest:120, tags:["hamstring","machine","hinge","isolation","bilateral"] },
+    { name:"Good Mornings", sets:3, target:"10 reps", note:"Bar on back, hinge forward — loads hamstrings and erectors.", rest:120, tags:["hamstring","back","barbell","hinge","compound","bilateral"] },
   ],
   "Trap Bar Deadlift": [
-    { name:"Conventional Deadlift", sets:4, target:"5 reps", note:"Standard barbell. More hip hinge and posterior chain demand than trap bar.", rest:180 },
-    { name:"Sumo Deadlift", sets:4, target:"5 reps", note:"Wide stance, hands inside legs. More adductor and quad involvement.", rest:180 },
+    { name:"Conventional Deadlift", sets:4, target:"5 reps", note:"Standard barbell. More hip hinge and posterior chain demand.", rest:180, tags:["hamstring","glute","back","barbell","hinge","compound","bilateral"] },
+    { name:"Sumo Deadlift", sets:4, target:"5 reps", note:"Wide stance. More adductor and quad involvement.", rest:180, tags:["hamstring","glute","adductor","barbell","hinge","compound","bilateral"] },
   ],
   "Romanian Deadlift": [
-    { name:"Cable Pull-Through", sets:4, target:"12 reps", note:"Low pulley, rope between legs — hip hinge with constant cable tension. No axial load.", rest:120 },
-    { name:"Kettlebell Swing", sets:4, target:"15 reps", note:"Explosive RDL pattern. Develops hip extension power for jumping and sprinting.", rest:120 },
+    { name:"Cable Pull-Through", sets:4, target:"12 reps", note:"Low pulley, rope between legs — hip hinge with no axial load.", rest:120, tags:["hamstring","glute","cable","hinge","compound","bilateral"] },
+    { name:"Kettlebell Swing", sets:4, target:"15 reps", note:"Explosive hip extension. Power for jumping and sprinting.", rest:120, tags:["hamstring","glute","kettlebell","hinge","compound","bilateral","explosive"] },
+    { name:"Good Mornings", sets:3, target:"10 reps", note:"Bar on back, hinge forward with flat back.", rest:120, tags:["hamstring","back","barbell","hinge","compound","bilateral"] },
   ],
   "Barbell Hip Thrust": [
-    { name:"DB Hip Thrust", sets:4, target:"12 reps", note:"Same movement, DBs on hips. Easier to set up, slightly less stable.", rest:120 },
-    { name:"Cable Hip Extension", sets:4, target:"15 reps/leg", note:"Low cable, ankle attachment. Single-leg glute isolation.", rest:90 },
+    { name:"DB Hip Thrust", sets:4, target:"12 reps", note:"Same movement, DBs on hips. Easier to set up.", rest:120, tags:["glute","hamstring","dumbbell","compound","bilateral"] },
+    { name:"Cable Hip Extension", sets:4, target:"15 reps/leg", note:"Low cable, ankle attachment. Single-leg glute isolation.", rest:90, tags:["glute","cable","isolation","unilateral"] },
   ],
   "Seated Leg Curl": [
-    { name:"Lying Leg Curl", sets:4, target:"12 reps", note:"Face down — slightly different hamstring angle. 3 sec eccentric.", rest:90 },
+    { name:"Lying Leg Curl", sets:4, target:"12 reps", note:"Face down — slightly different hamstring angle. 3 sec eccentric.", rest:90, tags:["hamstring","machine","isolation","bilateral"] },
   ],
   "Overhead Press": [
-    { name:"DB Shoulder Press", sets:4, target:"10 reps", note:"Independent arms — deeper range, exposes imbalances.", rest:180 },
-    { name:"Arnold Press", sets:4, target:"10 reps", note:"Start palms facing you, rotate to palms forward as you press. Hits all three delt heads.", rest:150 },
+    { name:"DB Shoulder Press", sets:4, target:"10 reps", note:"Independent arms — deeper range, exposes imbalances.", rest:180, tags:["shoulder","tricep","dumbbell","push","compound","bilateral"] },
+    { name:"Arnold Press", sets:4, target:"10 reps", note:"Rotate from palms facing you to forward as you press. Hits all three delt heads.", rest:150, tags:["shoulder","tricep","dumbbell","push","compound","bilateral"] },
   ],
   "DB Lateral Raise": [
-    { name:"Cable Lateral Raise — Both Arms", sets:3, target:"15 reps", note:"Cross cables at low pulley, raise both simultaneously. Constant tension.", rest:60 },
-    { name:"Machine Lateral Raise", sets:3, target:"15 reps", note:"Pad on wrist — removes momentum entirely.", rest:60 },
+    { name:"Cable Lateral Raise — Both Arms", sets:3, target:"15 reps", note:"Cross cables at low pulley. Constant tension.", rest:60, tags:["shoulder","cable","push","isolation","bilateral"] },
+    { name:"Machine Lateral Raise", sets:3, target:"15 reps", note:"Pad on wrist — removes momentum entirely.", rest:60, tags:["shoulder","machine","push","isolation","bilateral"] },
   ],
   "Rear Delt DB Fly": [
-    { name:"Band Pull-Aparts", sets:4, target:"20 reps", note:"Bodyweight band — rear delt pump, no equipment needed beyond a band.", rest:45 },
-    { name:"Face Pulls (Extra Sets)", sets:4, target:"15 reps", note:"Rope at face height, external rotation finish. Rear delt plus rotator cuff.", rest:60 },
+    { name:"Band Pull-Aparts", sets:4, target:"20 reps", note:"Bodyweight band — rear delt pump, minimal equipment.", rest:45, tags:["shoulder","back","band","pull","isolation","bilateral"] },
+    { name:"Face Pulls (Extra Sets)", sets:4, target:"15 reps", note:"Rope at face height with external rotation.", rest:60, tags:["shoulder","back","cable","pull","isolation","bilateral"] },
   ],
   "Close-Grip Bench Press": [
-    { name:"Skull Crushers", sets:3, target:"12 reps", note:"EZ bar lowered to forehead. Long head under stretch.", rest:90 },
-    { name:"Tricep Dips", sets:3, target:"To Failure", note:"Elbows tucked — tricep emphasis over chest.", rest:120 },
+    { name:"Skull Crushers", sets:3, target:"12 reps", note:"EZ bar to forehead — long head under stretch.", rest:90, tags:["tricep","barbell","push","isolation","bilateral"] },
+    { name:"Tricep Dips", sets:3, target:"To Failure", note:"Elbows tucked — tricep emphasis.", rest:120, tags:["tricep","chest","bodyweight","push","compound","bilateral"] },
   ],
   "Overhead Tricep Extension": [
-    { name:"DB Overhead Extension", sets:3, target:"12 reps", note:"One or two DBs overhead — same long head stretch.", rest:90 },
+    { name:"DB Overhead Extension", sets:3, target:"12 reps", note:"One or two DBs overhead — same long head stretch.", rest:90, tags:["tricep","dumbbell","push","isolation","bilateral"] },
+    { name:"Skull Crushers", sets:3, target:"12 reps", note:"EZ bar to forehead.", rest:90, tags:["tricep","barbell","push","isolation","bilateral"] },
   ],
   "Slow Controlled Barbell Curl": [
-    { name:"Cable Curl — Slow Eccentric", sets:3, target:"12 reps", note:"Low pulley cable, 4 sec eccentric. Constant tension version.", rest:90 },
-    { name:"Preacher Curl", sets:3, target:"10 reps", note:"Upper arm fixed on pad — removes momentum completely.", rest:90 },
+    { name:"Cable Curl — Slow Eccentric", sets:3, target:"12 reps", note:"Low pulley, 4 sec eccentric. Constant tension.", rest:90, tags:["bicep","cable","pull","isolation","bilateral"] },
+    { name:"Preacher Curl", sets:3, target:"10 reps", note:"Upper arm fixed — removes momentum completely.", rest:90, tags:["bicep","barbell","pull","isolation","bilateral"] },
   ],
   "Incline DB Curl": [
-    { name:"Cable Curl — High Pulley", sets:3, target:"12 reps/arm", note:"Single arm from above — keeps the bicep under tension at the lengthened position.", rest:90 },
-    { name:"Spider Curl", sets:3, target:"12 reps", note:"Chest-down on incline bench, curl DBs — no momentum possible.", rest:90 },
+    { name:"Spider Curl", sets:3, target:"12 reps", note:"Chest-down on incline bench — no momentum possible.", rest:90, tags:["bicep","dumbbell","pull","isolation","bilateral"] },
+    { name:"Cable Curl — High Pulley", sets:3, target:"12 reps/arm", note:"Single arm from above — tension at lengthened position.", rest:90, tags:["bicep","cable","pull","isolation","unilateral"] },
   ],
 };
