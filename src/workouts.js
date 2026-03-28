@@ -124,6 +124,10 @@ export const WORKOUTS = {
         { name:"Band External Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Critical with boxing twice a week.", rest:45, tags:["shoulder","band","isolation","unilateral"] },
         { name:"Band Internal Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Balance both directions.", rest:45, tags:["shoulder","band","isolation","unilateral"] },
       ]},
+      { title:"Core", exercises:[
+        { name:"Ab Wheel Rollout", sets:3, target:"10 reps", note:"From knees — roll out slowly until body is parallel to floor, pull back. Anti-extension core under max load. Directly builds the pressing stability and boxing rotational base you need.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
+        { name:"Pallof Press", sets:3, target:"12 reps/side", note:"Cable at chest height, hold handle at chest, press straight out and hold 2 sec before returning. Anti-rotation — the core demand for every boxing punch and basketball cut. Stand side-on to the cable.", rest:60, tags:["core","cable","iso","unilateral"] },
+      ]},
     ]
   },
 
@@ -147,15 +151,18 @@ export const WORKOUTS = {
         { name:"Single-Leg RDL Hold", sets:3, target:"20 sec/side", note:"Stand on one leg, hinge to mid-shin level, hold. Same hamstring tendon loading as bilateral RDL hold but adds proprioceptive demand and is more specific to the single-leg work that follows. Use light DB for counterbalance if needed.", rest:45, tags:["hamstring","bodyweight","hinge","iso","unilateral"] },
       ]},
       { title:"Posterior Chain Strength", exercises:[
-        { name:"Nordic Curls", sets:3, target:"6 reps", note:"Ph2–3 only. Do FIRST while hamstrings are completely fresh. Kneel on pad, anchor feet, lower body using hamstring eccentric control as slowly as possible.", rest:120, tags:["hamstring","bodyweight","hinge","compound","bilateral"] },
-        { name:"Trap Bar Deadlift", sets:4, target:"5 reps", note:"Primary strength driver today. No squats — spine is fully recovered from Thursday. Controlled descent, explosive hip drive.", rest:180, tags:["hamstring","glute","back","barbell","hinge","compound","bilateral"] },
-        { name:"Romanian Deadlift", sets:3, target:"8 reps", note:"Hamstring hypertrophy after the heavy hinge. Feel full stretch at bottom every rep. Reduced from 4 sets given spinal load already accumulated from trap bar deadlift. Tempo applies.", rest:180, tags:["hamstring","glute","barbell","hinge","compound","bilateral"] },
-        { name:"Barbell Hip Thrust", sets:4, target:"12 reps", note:"Squeeze plus 1 sec hold at top every rep. Primary glute hypertrophy exercise.", rest:120, tags:["glute","hamstring","barbell","compound","bilateral"] },
-        { name:"Seated Leg Curl", sets:3, target:"10 reps", note:"3 sec eccentric. Hypertrophy-focused — targets the shortened and mid-range position that Nordic curls don't emphasize. Reduced sets since Nordic curls cover the lengthened position.", rest:90, tags:["hamstring","machine","isolation","bilateral"] },
+        { name:"Nordic Curls", sets:3, target:"6 reps", note:"Ph2–3 only. Do FIRST while hamstrings are completely fresh. Lower as slowly as possible — catch yourself with hands at the bottom. Ph1: skip this and do an extra set of leg curls instead.", rest:120, tags:["hamstring","bodyweight","hinge","compound","bilateral"] },
+        { name:"Trap Bar Deadlift", sets:4, target:"5 reps", note:"Primary strength driver. No squats today — spine fully recovered from Thursday. Controlled descent, explosive hip drive. Ph rotation: swap for conventional or sumo deadlift every 3–4 weeks.", rest:180, tags:["hamstring","glute","back","barbell","hinge","compound","bilateral"] },
+        { name:"Barbell Hip Thrust", sets:4, target:"12 reps", note:"Squeeze plus 1 sec hold at top every rep. Primary glute hypertrophy exercise — do not rush.", rest:120, tags:["glute","hamstring","barbell","compound","bilateral"] },
+        { name:"Seated Leg Curl", sets:3, target:"10 reps", note:"3 sec eccentric every rep. Ph1: do 4 sets here instead of Nordic curls. Ph2–3: this is your hamstring hypertrophy finisher after Nordics handle the strength work.", rest:90, tags:["hamstring","machine","isolation","bilateral"] },
       ]},
       { title:"Adductors", exercises:[
         { name:"Adductor Machine", sets:3, target:"15 reps", note:"3 sec eccentric opening — the lengthening is where the adaptation happens. Full range.", rest:90, tags:["adductor","machine","isolation","bilateral"] },
         { name:"Copenhagen Plank", sets:3, target:"25 sec/side", note:"Top leg on bench, bottom leg hanging. Groin injury prevention — evidence-backed.", rest:60, tags:["adductor","core","bodyweight","iso","unilateral"] },
+      ]},
+      { title:"Core", exercises:[
+        { name:"Dead Bug", sets:3, target:"10 reps/side", note:"Lie on back, arms to ceiling, knees at 90°. Lower opposite arm and leg simultaneously while pressing lower back into the floor. Anti-extension core — directly builds the spinal stability needed for heavy deadlifts and hip thrusts.", rest:60, tags:["core","bodyweight","compound","unilateral"] },
+        { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Dead hang, no momentum. Rotate weekly: straight raises → toes to bar → oblique knee tucks → windshield wipers.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
       ]},
       { title:"Conditioning Finisher", exercises:[
         { name:"Sled Sprint Carry", sets:4, target:"20 yards", note:"Lean in, drive the knees, big arm swing. Ph1: light load, mechanics. Ph2: moderate. Ph3: heavy, max effort. 90 sec rest. NO SLED ALTERNATIVES: Hill sprints (best substitute — same leg drive demand), resistance band resisted sprints (anchor band at waist, sprint against resistance), or loaded gym bag pushed across turf floor.", rest:90, tags:["quad","glute","hamstring","sled","compound","bilateral","explosive"] },
@@ -205,10 +212,14 @@ export const WORKOUTS = {
         { name:"Slow Controlled Barbell Curl", sets:3, target:"10 reps", note:"4 sec eccentric, 1 sec pause, 2 sec concentric. No swinging.", rest:90, tags:["bicep","barbell","pull","isolation","bilateral"] },
         { name:"Hammer Curl", sets:3, target:"12 reps", note:"Neutral grip. Brachialis and forearm thickness.", rest:60, tags:["bicep","forearm","dumbbell","pull","isolation","bilateral"] },
       ]},
-      { title:"Forearms + Core", exercises:[
+      { title:"Forearms + Grip", exercises:[
         { name:"Reverse Curl (EZ Bar)", sets:3, target:"12 reps", note:"Overhand grip — brachioradialis emphasis.", rest:60, tags:["forearm","bicep","barbell","pull","isolation","bilateral"] },
-        { name:"Farmer Carry", sets:3, target:"30 sec", note:"Heavy DBs. Grip, forearms, traps, and core all working.", rest:60, tags:["forearm","trap","core","dumbbell","carry","compound","bilateral"] },
-        { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Rotate weekly: straight raises → toes to bar → oblique tucks → windshield wipers.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
+        { name:"Farmer Carry", sets:3, target:"30 sec", note:"Heavy DBs. Grip, forearms, traps, and core all working simultaneously.", rest:60, tags:["forearm","trap","core","dumbbell","carry","compound","bilateral"] },
+      ]},
+      { title:"Core", exercises:[
+        { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Dead hang. Rotate weekly: straight raises → toes to bar → oblique knee tucks → windshield wipers. Progress through these over the 12 weeks.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
+        { name:"Cable Woodchop", sets:3, target:"12 reps/side", note:"High pulley, rotate from high to low diagonally across the body. Rotational core power — this is the movement pattern for every boxing punch and basketball drive. Drive from the hips, not just the arms.", rest:60, tags:["core","cable","compound","unilateral"] },
+        { name:"Plank", sets:2, target:"45 sec", note:"Full body tension. Don't let the hips sag or rise. This is an anti-extension hold — brace everything.", rest:45, tags:["core","bodyweight","iso","bilateral"] },
       ]},
       { title:"Rotator Cuff", exercises:[
         { name:"Band External Rotation", sets:3, target:"15 reps/arm", note:"Elbow at side. Every upper day ends here.", rest:45, tags:["shoulder","band","isolation","unilateral"] },
