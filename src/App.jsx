@@ -287,6 +287,60 @@ function PREditorModal({ prEditor, prs, phase, onSave, onClose }) {
 }
 
 // ── MAIN APP ───────────────────────────────────────────────────────────────
+// ── AUTH MODALS (outside App — prevents keyboard dismiss on re-render) ────────
+
+function AuthModal({ showAuth, authMode, setAuthMode, authName, setAuthName, authEmail, setAuthEmail, authPwd, setAuthPwd, authErr, authLoading, onAuth, onClose }) {
+  if (!showAuth) return null;
+  return (
+    <div style={{...S.overlay, zIndex:200}}>
+      <div style={S.sheet}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px"}}>
+          <div style={{fontSize:"20px",fontWeight:900}}>{authMode==="login"?"SIGN IN":"CREATE ACCOUNT"}</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#444",fontSize:"22px",cursor:"pointer"}}>✕</button>
+        </div>
+        {!isConfigured&&<div style={{padding:"10px 14px",background:"#1a0a00",border:"1px solid #e8a83840",borderRadius:"8px",marginBottom:"14px",fontSize:"11px",color:"#e8a838",lineHeight:1.5}}>Open src/supabase.js and follow setup instructions to enable cloud sync.</div>}
+        {authMode==="signup"&&<div style={{marginBottom:"10px"}}><div style={{fontSize:"9px",color:"#444",letterSpacing:"2px",marginBottom:"5px"}}>NAME</div><input style={S.textInp} value={authName} onChange={e=>setAuthName(e.target.value)} placeholder="Roger"/></div>}
+        <div style={{marginBottom:"10px"}}><div style={{fontSize:"9px",color:"#444",letterSpacing:"2px",marginBottom:"5px"}}>EMAIL</div><input style={S.textInp} type="email" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="you@example.com"/></div>
+        <div style={{marginBottom:"16px"}}><div style={{fontSize:"9px",color:"#444",letterSpacing:"2px",marginBottom:"5px"}}>PASSWORD</div><input style={S.textInp} type="password" value={authPwd} onChange={e=>setAuthPwd(e.target.value)} placeholder="••••••••"/></div>
+        {authErr&&<div style={{fontSize:"11px",color:"#e05c2a",marginBottom:"12px",lineHeight:1.4}}>{authErr}</div>}
+        <button style={{...S.btn("#e8a838",false),padding:"13px",opacity:authLoading?0.6:1}} onClick={onAuth} disabled={authLoading}>
+          {authLoading?"...":(authMode==="login"?"SIGN IN →":"CREATE ACCOUNT →")}
+        </button>
+        <button onClick={()=>{setAuthMode(authMode==="login"?"signup":"login");}} style={{width:"100%",marginTop:"10px",padding:"10px",background:"none",border:"none",color:"#444",fontSize:"12px",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif"}}>
+          {authMode==="login"?"Don't have an account? Sign up":"Already have an account? Sign in"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProfileModal({ showProfile, user, syncing, migratePrompt, onSync, onMigrate, onSignOut, onClose }) {
+  if (!showProfile) return null;
+  return (
+    <div style={{...S.overlay, zIndex:200}}>
+      <div style={S.sheet}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px"}}>
+          <div style={{fontSize:"20px",fontWeight:900}}>PROFILE</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#444",fontSize:"22px",cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:"12px 14px",background:"#161616",borderRadius:"10px",marginBottom:"14px"}}>
+          <div style={{fontSize:"11px",color:"#555",marginBottom:"2px"}}>SIGNED IN AS</div>
+          <div style={{fontSize:"14px",fontWeight:700,color:"#ccc"}}>{user?.user_metadata?.name||user?.email}</div>
+          <div style={{fontSize:"11px",color:"#333",marginTop:"2px"}}>{user?.email}</div>
+        </div>
+        {migratePrompt&&<div style={{padding:"12px 14px",background:"#1a1200",border:"1px solid #e8a83840",borderRadius:"10px",marginBottom:"12px"}}>
+          <div style={{fontSize:"12px",color:"#e8a838",fontWeight:700,marginBottom:"6px"}}>LOCAL DATA FOUND</div>
+          <div style={{fontSize:"11px",color:"#7a6030",lineHeight:1.5,marginBottom:"10px"}}>Upload your existing workout history to your account.</div>
+          <button onClick={onMigrate} style={{...S.btn("#e8a838",false),padding:"10px",fontSize:"12px"}}>UPLOAD LOCAL DATA →</button>
+        </div>}
+        {syncing&&<div style={{fontSize:"10px",color:"#e8a838",marginBottom:"10px",letterSpacing:"1px"}}>SYNCING...</div>}
+        <button onClick={onSync} style={{...S.btn("#1a2a3a",true),padding:"11px",fontSize:"12px",color:"#4a9eda",border:"1px solid #1a3a5a",marginBottom:"8px"}}>SYNC TO CLOUD</button>
+        <button onClick={onSignOut} style={{...S.btn("#c0392b",true),padding:"11px",fontSize:"12px"}}>SIGN OUT</button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState("today");
   const [phase, setPhase] = useState(1);
@@ -1026,61 +1080,11 @@ export default function App() {
   }
 
   // ── AUTH MODALS ────────────────────────────────────────────────────────────
-  function AuthModal(){
-    if(!showAuth)return null;
-    return(
-      <div style={{...S.overlay,zIndex:200}}>
-        <div style={S.sheet}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px"}}>
-            <div style={{fontSize:"20px",fontWeight:900}}>{authMode==="login"?"SIGN IN":"CREATE ACCOUNT"}</div>
-            <button onClick={()=>setShowAuth(false)} style={{background:"none",border:"none",color:"#444",fontSize:"22px",cursor:"pointer"}}>✕</button>
-          </div>
-          {!isConfigured&&<div style={{padding:"10px 14px",background:"#1a0a00",border:"1px solid #e8a83840",borderRadius:"8px",marginBottom:"14px",fontSize:"11px",color:"#e8a838",lineHeight:1.5}}>Open src/supabase.js and follow setup instructions to enable cloud sync.</div>}
-          {authMode==="signup"&&<div style={{marginBottom:"10px"}}><div style={{fontSize:"9px",color:"#444",letterSpacing:"2px",marginBottom:"5px"}}>NAME</div><input style={S.textInp} value={authName} onChange={e=>setAuthName(e.target.value)} placeholder="Roger"/></div>}
-          <div style={{marginBottom:"10px"}}><div style={{fontSize:"9px",color:"#444",letterSpacing:"2px",marginBottom:"5px"}}>EMAIL</div><input style={S.textInp} type="email" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} placeholder="you@example.com"/></div>
-          <div style={{marginBottom:"16px"}}><div style={{fontSize:"9px",color:"#444",letterSpacing:"2px",marginBottom:"5px"}}>PASSWORD</div><input style={S.textInp} type="password" value={authPwd} onChange={e=>setAuthPwd(e.target.value)} placeholder="••••••••"/></div>
-          {authErr&&<div style={{fontSize:"11px",color:"#e05c2a",marginBottom:"12px",lineHeight:1.4}}>{authErr}</div>}
-          <button style={{...S.btn("#e8a838",false),padding:"13px",opacity:authLoading?0.6:1}} onClick={handleAuth} disabled={authLoading}>{authLoading?"...":(authMode==="login"?"SIGN IN →":"CREATE ACCOUNT →")}</button>
-          <button onClick={()=>{setAuthMode(authMode==="login"?"signup":"login");setAuthErr("");}} style={{width:"100%",marginTop:"10px",padding:"10px",background:"none",border:"none",color:"#444",fontSize:"12px",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif"}}>
-            {authMode==="login"?"Don't have an account? Sign up":"Already have an account? Sign in"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  function ProfileModal(){
-    if(!showProfile)return null;
-    return(
-      <div style={{...S.overlay,zIndex:200}}>
-        <div style={S.sheet}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px"}}>
-            <div style={{fontSize:"20px",fontWeight:900}}>PROFILE</div>
-            <button onClick={()=>setShowProfile(false)} style={{background:"none",border:"none",color:"#444",fontSize:"22px",cursor:"pointer"}}>✕</button>
-          </div>
-          <div style={{padding:"12px 14px",background:"#161616",borderRadius:"10px",marginBottom:"14px"}}>
-            <div style={{fontSize:"11px",color:"#555",marginBottom:"2px"}}>SIGNED IN AS</div>
-            <div style={{fontSize:"14px",fontWeight:700,color:"#ccc"}}>{user?.user_metadata?.name||user?.email}</div>
-            <div style={{fontSize:"11px",color:"#333",marginTop:"2px"}}>{user?.email}</div>
-          </div>
-          {migratePrompt&&<div style={{padding:"12px 14px",background:"#1a1200",border:"1px solid #e8a83840",borderRadius:"10px",marginBottom:"12px"}}>
-            <div style={{fontSize:"12px",color:"#e8a838",fontWeight:700,marginBottom:"6px"}}>LOCAL DATA FOUND</div>
-            <div style={{fontSize:"11px",color:"#7a6030",lineHeight:1.5,marginBottom:"10px"}}>Upload your existing workout history to your account.</div>
-            <button onClick={async()=>{setSyncing(true);await syncCloud();setMigratePrompt(false);setSyncing(false);}} style={{...S.btn("#e8a838",false),padding:"10px",fontSize:"12px"}}>UPLOAD LOCAL DATA →</button>
-          </div>}
-          {syncing&&<div style={{fontSize:"10px",color:"#e8a838",marginBottom:"10px",letterSpacing:"1px"}}>SYNCING...</div>}
-          <button onClick={()=>syncCloud()} style={{...S.btn("#1a2a3a",true),padding:"11px",fontSize:"12px",color:"#4a9eda",border:"1px solid #1a3a5a",marginBottom:"8px"}}>SYNC TO CLOUD</button>
-          <button onClick={handleSignOut} style={{...S.btn("#c0392b",true),padding:"11px",fontSize:"12px"}}>SIGN OUT</button>
-        </div>
-      </div>
-    );
-  }
-
   // ── MAIN SCREENS ───────────────────────────────────────────────────────────
   return(
     <div style={S.app}>
-      <AuthModal/>
-      <ProfileModal/>
+      <AuthModal showAuth={showAuth} authMode={authMode} setAuthMode={setAuthMode} authName={authName} setAuthName={setAuthName} authEmail={authEmail} setAuthEmail={setAuthEmail} authPwd={authPwd} setAuthPwd={setAuthPwd} authErr={authErr} authLoading={authLoading} onAuth={handleAuth} onClose={()=>setShowAuth(false)}/>
+      <ProfileModal showProfile={showProfile} user={user} syncing={syncing} migratePrompt={migratePrompt} onSync={syncCloud} onMigrate={async()=>{setSyncing(true);await syncCloud();setMigratePrompt(false);setSyncing(false);}} onSignOut={handleSignOut} onClose={()=>setShowProfile(false)}/>
       <NoteEditorModal noteEditor={noteEditor} noteVal={noteVal} setNoteVal={setNoteVal} onSave={(v)=>saveNote(noteEditor.exName,v)} onClear={()=>saveNote(noteEditor.exName,"")} onClose={()=>setNoteEditor(null)}/>
       <SwapModal swapModal={swapModal} swapTab={swapTab} setSwapTab={setSwapTab} swapSearch={swapSearch} setSwapSearch={setSwapSearch} session={session} onApply={applySwap} onRevert={revertSwap} onClose={()=>setSwapModal(null)}/>
       <PREditorModal prEditor={prEditor} prs={prs} phase={phase} onSave={savePR} onClose={()=>setPrEditor(null)}/>
