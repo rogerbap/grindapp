@@ -351,7 +351,7 @@ export default function App() {
       // Restore wall-clock start so timer is correct
       sessionStartRef.current = saved.startedAt || (Date.now()-e*1000);
     }
-    if(isConfigured){
+    if(isConfigured && supabase){
       supabase.auth.getSession().then(({data:{session:s}})=>{
         if(s){setUser(s.user);loadCloud(s.user.id);}
       });
