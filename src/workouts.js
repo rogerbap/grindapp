@@ -86,7 +86,7 @@ export const WORKOUTS = {
         { name:"Tibialis Raise", sets:3, target:"20 reps", note:"Heels on step, pull toes up against resistance. Prevents shin splints — non-negotiable with sprinting and boxing footwork.", rest:45, tags:["calf","bodyweight","isolation","bilateral"] },
       ]},
       { title:"Core", exercises:[
-        { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Dead hang, no momentum. Rotate each week: straight raises → toes to bar → oblique knee tucks → windshield wipers.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
+        { name:"Lying Leg Raise", sets:3, target:"12 reps", note:"Flat on floor, lower back pressed down hard. Raise straight legs to 90° then lower slowly. Ph1: slight knee bend. Ph2: straight legs. Ph3: ankle weight. Foundation that builds toward hanging leg raises — do not skip.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
         { name:"Plank Drags", sets:3, target:"10 reps/side", note:"Push-up plank, drag KB across body. Zero hip rotation — anti-rotation demand is the entire point.", rest:60, tags:["core","kettlebell","iso","unilateral"] },
       ]},
     ]
@@ -162,7 +162,7 @@ export const WORKOUTS = {
       ]},
       { title:"Core", exercises:[
         { name:"Dead Bug", sets:3, target:"10 reps/side", note:"Lie on back, arms to ceiling, knees at 90°. Lower opposite arm and leg simultaneously while pressing lower back into the floor. Anti-extension core — directly builds the spinal stability needed for heavy deadlifts and hip thrusts.", rest:60, tags:["core","bodyweight","compound","unilateral"] },
-        { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Dead hang, no momentum. Rotate weekly: straight raises → toes to bar → oblique knee tucks → windshield wipers.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
+        { name:"Decline Leg Raise", sets:3, target:"12 reps", note:"On a decline bench, grip behind head. Raise legs to 90°. Ph1: slight knee bend. Ph2: straight legs. Ph3: DB between feet. Harder than floor version — step up from Lying Leg Raise.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
       ]},
       { title:"Conditioning Finisher", exercises:[
         { name:"Sled Sprint Carry", sets:4, target:"20 yards", note:"Lean in, drive the knees, big arm swing. Ph1: light load, mechanics. Ph2: moderate. Ph3: heavy, max effort. 90 sec rest. NO SLED ALTERNATIVES: Hill sprints (best substitute — same leg drive demand), resistance band resisted sprints (anchor band at waist, sprint against resistance), or loaded gym bag pushed across turf floor.", rest:90, tags:["quad","glute","hamstring","sled","compound","bilateral","explosive"] },
@@ -217,7 +217,7 @@ export const WORKOUTS = {
         { name:"Farmer Carry", sets:3, target:"30 sec", note:"Heavy DBs. Grip, forearms, traps, and core all working simultaneously.", rest:60, tags:["forearm","trap","core","dumbbell","carry","compound","bilateral"] },
       ]},
       { title:"Core", exercises:[
-        { name:"Hanging Leg Raise", sets:3, target:"12 reps", note:"Dead hang. Rotate weekly: straight raises → toes to bar → oblique knee tucks → windshield wipers. Progress through these over the 12 weeks.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
+        { name:"Weighted Decline Sit-Up", sets:3, target:"12 reps", note:"On a decline bench, hold a plate at chest. Full range — shoulders touch the pad at the bottom, sit fully upright at the top. Ph1: bodyweight only. Ph2: 10–25 lbs. Ph3: 25–45 lbs. Flex the abs at the top — don't just use momentum.", rest:60, tags:["core","bodyweight","compound","bilateral"] },
         { name:"Cable Woodchop", sets:3, target:"12 reps/side", note:"High pulley, rotate from high to low diagonally across the body. Rotational core power — this is the movement pattern for every boxing punch and basketball drive. Drive from the hips, not just the arms.", rest:60, tags:["core","cable","compound","unilateral"] },
         { name:"Plank", sets:2, target:"45 sec", note:"Full body tension. Don't let the hips sag or rise. This is an anti-extension hold — brace everything.", rest:45, tags:["core","bodyweight","iso","bilateral"] },
       ]},

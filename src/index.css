@@ -3,12 +3,17 @@ html, body, #root { height: 100%; width: 100%; }
 body {
   background: #080808;
   color: #f0f0f0;
-  font-family: 'Barlow Condensed', sans-serif;
+  /* Barlow Condensed first, then condensed system fallbacks */
+  font-family: 'Barlow Condensed', ui-condensed, 'Arial Narrow', 'Helvetica Neue Condensed', sans-serif-condensed, sans-serif;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
+  /* Prevent pull-to-refresh breaking the app feel */
+  overscroll-behavior-y: contain;
 }
 input[type=number] { -moz-appearance: textfield; }
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 ::-webkit-scrollbar { width: 0; height: 0; }
+/* Smooth scroll for session content */
+* { -webkit-overflow-scrolling: touch; }

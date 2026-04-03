@@ -1,0 +1,49 @@
+import { createClient } from '@supabase/supabase-js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SETUP INSTRUCTIONS:
+// 1. Go to https://supabase.com and create a free project
+// 2. Go to Project Settings → API
+// 3. Copy your Project URL and anon/public key
+// 4. Replace the values below
+// 5. Run this SQL in the Supabase SQL editor (Project → SQL Editor):
+//
+// create table user_profiles (
+//   id uuid references auth.users primary key,
+//   name text,
+//   created_at timestamptz default now()
+// );
+// create table user_prs (
+//   id uuid default gen_random_uuid() primary key,
+//   user_id uuid references auth.users not null,
+//   lift_name text not null,
+//   weight numeric not null,
+//   reps integer not null,
+//   estimated_1rm numeric not null,
+//   logged_at timestamptz default now()
+// );
+// create table user_data (
+//   id uuid references auth.users primary key,
+//   history jsonb default '[]',
+//   notes jsonb default '{}',
+//   custom_workouts jsonb default '[]',
+//   preset_overrides jsonb default '{}',
+//   settings jsonb default '{}',
+//   updated_at timestamptz default now()
+// );
+// -- Enable row level security
+// alter table user_profiles enable row level security;
+// alter table user_prs enable row level security;
+// alter table user_data enable row level security;
+// -- Policies (users can only access their own data)
+// create policy "own profile" on user_profiles for all using (auth.uid() = id);
+// create policy "own prs" on user_prs for all using (auth.uid() = user_id);
+// create policy "own data" on user_data for all using (auth.uid() = id);
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+export const isConfigured = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
