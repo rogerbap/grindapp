@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { WORKOUTS, PHASE_COLORS, DAY_ORDER, JS_TO_DAY, PHASE_INFO, TEMPO, SWAPS, EXERCISE_LIBRARY, MOBILITY_SESSION } from "./workouts.js";
+import { useState, useEffect, useRef } from "react";
+import { WORKOUTS, PHASE_COLORS, DAY_ORDER, JS_TO_DAY, PHASE_INFO, TEMPO, SWAPS, EXERCISE_LIBRARY, MOBILITY_SESSION, PR_GROUPS } from "./workouts.js";
 import { supabase, isConfigured } from "./supabase.js";
+import Landing from "./Landing.jsx";
+import Onboarding from "./Onboarding.jsx";
+import Search from "./Search.jsx";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function getTodayId() { return JS_TO_DAY[new Date().getDay()]; }
@@ -10,13 +13,22 @@ function uid() { return Math.random().toString(36).slice(2,9); }
 function calc1RM(w,r) { if(!w||!r||r<=0)return 0; if(r===1)return w; return Math.round(w*(1+r/30)); }
 function calcWt(orm,pct) { return Math.round((orm*pct/100)/2.5)*2.5; }
 
+function calcWeekFromStart(startDate) {
+  if(!startDate) return 1;
+  const start = new Date(startDate);
+  const now = new Date();
+  const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return Math.min(12, Math.max(1, Math.ceil((days + 1) / 7)));
+}
+
+function calcPhaseFromWeek(w) {
+  if(w <= 2) return 1;
+  if(w <= 6) return 2;
+  return 3;
+}
+
 const PHASE_PCT = { 1:[0.60,0.65], 2:[0.70,0.80], 3:[0.80,0.87] };
-const PR_LIFTS = [
-  "Flat Barbell Bench Press","Incline Barbell Press","Barbell Bent-Over Row",
-  "Weighted Pull-Ups","Overhead Press","Banded Box Squat",
-  "Front Squat — Heel Elevated","Trap Bar Deadlift","Barbell Hip Thrust",
-  "Bulgarian Split Squat with Rotation","Nordic Curls","Romanian Deadlift",
-];
+
 const TAG_MUSCLES = ["quad","hamstring","glute","chest","back","shoulder","tricep","bicep","core","calf","adductor","forearm","trap"];
 const DAY_COLORS = ["#e8a838","#2980b9","#c0392b","#8e44ad","#27ae60","#16a085","#e05c2a","#576574","#d35400","#1a5276"];
 
@@ -287,6 +299,40 @@ function PREditorModal({ prEditor, prs, phase, onSave, onClose }) {
 }
 
 // ── MAIN APP ───────────────────────────────────────────────────────────────
+// ── PR GROUP MODAL ────────────────────────────────────────────────────────────
+function PRGroupModal({ onAdd, onClose }) {
+  const [label, setLabel] = useState("");
+  const [variants, setVariants] = useState("");
+  function submit() {
+    if (!label.trim()) return;
+    const variantList = variants.split(",").map(v => v.trim()).filter(Boolean);
+    onAdd(label.trim(), variantList);
+    onClose();
+  }
+  return (
+    <div style={{...S.overlay, zIndex:150}}>
+      <div style={S.sheet}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+          <div style={{fontSize:"18px",fontWeight:900}}>ADD PR LIFT</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#444",fontSize:"22px",cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{marginBottom:"12px"}}>
+          <div style={{fontSize:"9px",color:"#444",letterSpacing:"2px",marginBottom:"5px"}}>MOVEMENT NAME</div>
+          <input style={S.textInp} value={label} onChange={e=>setLabel(e.target.value)} placeholder="e.g. Hip Thrust" autoFocus/>
+        </div>
+        <div style={{marginBottom:"6px"}}>
+          <div style={{fontSize:"9px",color:"#444",letterSpacing:"2px",marginBottom:"5px"}}>EXERCISE VARIANTS (comma separated)</div>
+          <textarea value={variants} onChange={e=>setVariants(e.target.value)}
+            placeholder="e.g. Barbell Hip Thrust, DB Hip Thrust, Cable Hip Extension"
+            style={{...S.textInp,minHeight:"80px",resize:"none",lineHeight:1.5}}/>
+        </div>
+        <div style={{fontSize:"9px",color:"#2a2a2a",marginBottom:"12px"}}>Separate multiple variants with commas. Leave blank to track just the movement name.</div>
+        <button style={{...S.btn("#e8a838",false),padding:"13px"}} onClick={submit}>ADD LIFT →</button>
+      </div>
+    </div>
+  );
+}
+
 // ── AUTH MODALS (outside App — prevents keyboard dismiss on re-render) ────────
 
 function AuthModal({ showAuth, authMode, setAuthMode, authName, setAuthName, authEmail, setAuthEmail, authPwd, setAuthPwd, authErr, authLoading, onAuth, onClose }) {
@@ -342,7 +388,15 @@ function ProfileModal({ showProfile, user, syncing, migratePrompt, onSync, onMig
 }
 
 export default function App() {
+  // App flow state
+  const [appState, setAppState] = useState("loading");
+  const [authInitialMode, setAuthInitialMode] = useState("signup");
+  const [userProfile, setUserProfile] = useState(null);
+  const [generatedPlan, setGeneratedPlan] = useState(null);
+
   const [tab, setTab] = useState("today");
+  const [planStartDate, setPlanStartDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [phase, setPhase] = useState(1);
   const [week, setWeek] = useState(1);
   const [activeDay, setActiveDay] = useState(null);
@@ -355,6 +409,10 @@ export default function App() {
   const [restTimer, setRestTimer] = useState(null);
   const [notes, setNotes] = useState({});
   const [prs, setPrs] = useState({});
+  const [newPR, setNewPR] = useState(null);
+  const [customPRGroups, setCustomPRGroups] = useState([]); // user-added PR groups
+  const [removedPRGroups, setRemovedPRGroups] = useState([]); // user-removed default groups
+  const [prGroupModal, setPrGroupModal] = useState(false); // add custom PR group modal // { exKey, weight } — triggers badge
   const [customWorkouts, setCustomWorkouts] = useState([]);
   const [presetOverrides, setPresetOverrides] = useState({});
   const [builder, setBuilder] = useState(null);
@@ -389,31 +447,60 @@ export default function App() {
 
   // ── LOAD ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const s=LS.get("grind_settings"); if(s){setPhase(s.phase||1);setWeek(s.week||1);}
+    const s=LS.get("grind_settings");
+    const startDate=s?.planStartDate||null;
+    if(startDate){
+      setPlanStartDate(startDate);
+      const w=calcWeekFromStart(startDate);
+      const p=calcPhaseFromWeek(w);
+      setWeek(w);setPhase(p);
+    } else if(s){
+      setPhase(s.phase||1);setWeek(s.week||1);
+    }
     const h=LS.get("grind_history"); if(h)setHistory(h);
     const n=LS.get("grind_notes"); if(n)setNotes(n);
     const cw=LS.get("grind_custom_workouts"); if(cw)setCustomWorkouts(cw);
     const po=LS.get("grind_preset_overrides"); if(po)setPresetOverrides(po);
     const pr=LS.get("grind_prs"); if(pr)setPrs(pr);
+    const cpg=LS.get("grind_custom_pr_groups"); if(cpg)setCustomPRGroups(cpg);
+    const rpg=LS.get("grind_removed_pr_groups"); if(rpg)setRemovedPRGroups(rpg);
     const saved=LS.get("grind_active_session");
     if(saved){
       const e=saved.elapsed||0;
-      setSession(saved.session);
-      setElapsed(e);
-      setActiveDay(saved.session.dayId);
-      setTab("session");
-      // Restore wall-clock start so timer is correct
+      setSession(saved.session);setElapsed(e);setActiveDay(saved.session.dayId);setTab("session");
       sessionStartRef.current = saved.startedAt || (Date.now()-e*1000);
     }
     if(isConfigured && supabase){
       supabase.auth.getSession().then(({data:{session:s}})=>{
-        if(s){setUser(s.user);loadCloud(s.user.id);}
+        if(s){
+          setUser(s.user);
+          loadCloud(s.user.id);
+          // Check if they've completed onboarding
+          const done=LS.get("grind_onboarding_complete");
+          setAppState(done?"app":"onboarding");
+        } else {
+          setAppState("landing");
+        }
       });
       const {data:{subscription}}=supabase.auth.onAuthStateChange((_,s)=>{
-        setUser(s?.user||null);
-        if(s?.user)loadCloud(s.user.id);
+        if(s?.user){
+          setUser(s.user);
+          loadCloud(s.user.id);
+          // Only redirect to app if we're not already mid-onboarding
+          setAppState(prev=>{
+            if(prev==="onboarding")return prev; // don't interrupt onboarding
+            const done=LS.get("grind_onboarding_complete");
+            return done?"app":"onboarding";
+          });
+        } else {
+          setUser(null);
+          setAppState("landing");
+        }
       });
       return()=>subscription.unsubscribe();
+    } else {
+      // No Supabase — go straight to app
+      setAppState("app");
     }
   }, []);
 
@@ -427,6 +514,8 @@ export default function App() {
   useEffect(()=>{LS.set("grind_notes",notes);},[notes]);
   useEffect(()=>{LS.set("grind_custom_workouts",customWorkouts);},[customWorkouts]);
   useEffect(()=>{LS.set("grind_preset_overrides",presetOverrides);},[presetOverrides]);
+  useEffect(()=>{LS.set("grind_custom_pr_groups",customPRGroups);},[customPRGroups]);
+  useEffect(()=>{LS.set("grind_removed_pr_groups",removedPRGroups);},[removedPRGroups]);
 
   // Persist session (include startedAt for timer restoration)
   useEffect(()=>{
@@ -486,8 +575,24 @@ export default function App() {
         if(ud.history?.length)setHistory(ud.history);
         if(ud.notes)setNotes(ud.notes);
         if(ud.custom_workouts?.length)setCustomWorkouts(ud.custom_workouts);
-        if(ud.preset_overrides)setPresetOverrides(ud.preset_overrides);
-        if(ud.settings){if(ud.settings.phase)setPhase(ud.settings.phase);if(ud.settings.week)setWeek(ud.settings.week);}
+        if(ud.preset_overrides&&Object.keys(ud.preset_overrides).length){
+          setPresetOverrides(ud.preset_overrides);
+          LS.set("grind_preset_overrides",ud.preset_overrides);
+        }
+        if(ud.settings){
+      if(ud.settings.planStartDate){
+        const sd=ud.settings.planStartDate;
+        setPlanStartDate(sd);
+        const w=calcWeekFromStart(sd);
+        const p=calcPhaseFromWeek(w);
+        setWeek(w);setPhase(p);
+      } else {
+        if(ud.settings.phase)setPhase(ud.settings.phase);
+        if(ud.settings.week)setWeek(ud.settings.week);
+      }
+    }
+        // Mark onboarding complete locally if done in cloud
+        if(ud.onboarding_complete)LS.set("grind_onboarding_complete",true);
       }
       if(prData?.length){
         const pm={};
@@ -499,11 +604,64 @@ export default function App() {
     }catch(e){console.error(e);}
   }
 
+  async function completeOnboarding({ profile, plan }) {
+    setUserProfile(profile);
+    setGeneratedPlan(plan);
+
+    // Convert generated plan days into preset overrides
+    // This replaces Roger's WORKOUTS with the user's generated plan
+    const overrides={};
+    if(plan?.weeks?.[0]?.days){
+      Object.entries(plan.weeks[0].days).forEach(([dayId,dayPlan])=>{
+        overrides[dayId]=dayPlan;
+      });
+    }
+    setPresetOverrides(overrides);
+    LS.set("grind_preset_overrides",overrides);
+    const startDate=today();
+    setPlanStartDate(startDate);
+    const w=calcWeekFromStart(startDate);
+    const p=calcPhaseFromWeek(w);
+    setWeek(w);setPhase(p);
+    LS.set("grind_user_profile",profile);
+    LS.set("grind_onboarding_complete",true);
+    LS.set("grind_settings",{planStartDate:startDate,phase:p,week:w});
+
+    // Save PRs from onboarding answers
+    if(profile.prs){
+      const prMap={...prs};
+      Object.entries(profile.prs).forEach(([key,val])=>{
+        if(val.weight&&val.reps){
+          const w=parseFloat(val.weight),r=parseInt(val.reps);
+          if(w&&r)prMap[key]={weight:w,reps:r,estimated1rm:calc1RM(w,r),date:today()};
+        }
+      });
+      if(Object.keys(prMap).length>0){setPrs(prMap);LS.set("grind_prs",prMap);}
+    }
+
+    // Sync to Supabase
+    if(user&&isConfigured&&supabase){
+      try{
+        await supabase.from("user_data").upsert({
+          id:user.id,history:[],notes:{},
+          custom_workouts:[],
+          preset_overrides:overrides,
+          settings:{phase:1,week:1},
+          user_profile:profile,
+          onboarding_complete:true,
+          updated_at:new Date().toISOString()
+        });
+      }catch(e){console.error("Supabase sync error",e);}
+    }
+
+    setAppState("app");
+  }
+
   async function syncCloud(){
     if(!user||!isConfigured)return;
     setSyncing(true);
     try{
-      await supabase.from("user_data").upsert({id:user.id,history,notes,custom_workouts:customWorkouts,preset_overrides:presetOverrides,settings:{phase,week},updated_at:new Date().toISOString()});
+      await supabase.from("user_data").upsert({id:user.id,history,notes,custom_workouts:customWorkouts,preset_overrides:presetOverrides,settings:{phase,week,planStartDate},updated_at:new Date().toISOString()});
     }catch(e){console.error(e);}
     setSyncing(false);
   }
@@ -515,12 +673,24 @@ export default function App() {
       if(authMode==="signup"){
         const{data,error}=await supabase.auth.signUp({email:authEmail,password:authPwd,options:{data:{name:authName}}});
         if(error)throw error;
-        if(data.user){await supabase.from("user_profiles").insert({id:data.user.id,name:authName});}
-        setAuthErr("Check your email to confirm your account.");
+        if(data.user){
+          try{await supabase.from("user_profiles").insert({id:data.user.id,name:authName});}catch(e){}
+          setUser(data.user);
+          setShowAuth(false);
+          if(data.session){
+            // Email confirmations disabled — go straight to onboarding
+            setAppState("onboarding");
+          } else {
+            // Email confirmation required
+            setAuthErr("Check your email to confirm your account, then sign back in.");
+          }
+        }
       } else {
-        const{error}=await supabase.auth.signInWithPassword({email:authEmail,password:authPwd});
+        const{data,error}=await supabase.auth.signInWithPassword({email:authEmail,password:authPwd});
         if(error)throw error;
         setShowAuth(false);
+        const done=LS.get("grind_onboarding_complete");
+        // Don't set appState here — onAuthStateChange will fire and handle it
       }
     }catch(e){setAuthErr(e.message);}
     setAuthLoading(false);
@@ -533,12 +703,44 @@ export default function App() {
     const w=parseFloat(weight),r=parseInt(reps);
     if(!w||!r)return;
     const est=calc1RM(w,r);
-    const entry={weight:w,reps:r,estimated1rm:est,date:today()};
+    const entry={weight:w,reps:r,estimated1rm:est,date:today(),implement:liftName};
     const updated={...prs,[liftName]:entry};
     setPrs(updated);LS.set("grind_prs",updated);
-    if(user&&isConfigured)supabase.from("user_prs").insert({user_id:user.id,lift_name:liftName,weight:w,reps:r,estimated_1rm:est});
+    if(user&&isConfigured&&supabase)supabase.from("user_prs").insert({user_id:user.id,lift_name:liftName,weight:w,reps:r,estimated_1rm:est});
     setPrEditor(null);
   }
+
+  function getActivePRGroups(){
+    const defaults=PR_GROUPS.filter(g=>!removedPRGroups.includes(g.id));
+    return[...defaults,...customPRGroups];
+  }
+
+  function getGroupPR(group){
+    if(!group?.variants)return prs[group.label]||null;
+    let best=null;
+    group.variants.forEach(v=>{
+      const pr=prs[v];
+      if(pr&&(!best||pr.weight>best.weight))best={...pr,implement:v};
+    });
+    const labelPR=prs[group.label];
+    if(labelPR&&(!best||labelPR.weight>best.weight))best={...labelPR,implement:group.label};
+    return best;
+  }
+
+  function removeDefaultPRGroup(groupId){
+    const u=[...removedPRGroups,groupId];setRemovedPRGroups(u);LS.set("grind_removed_pr_groups",u);
+  }
+  function restoreDefaultPRGroup(groupId){
+    const u=removedPRGroups.filter(id=>id!==groupId);setRemovedPRGroups(u);LS.set("grind_removed_pr_groups",u);
+  }
+  function addCustomPRGroup(label,variants){
+    const g={id:`custom_${uid()}`,label,variants:variants.filter(v=>v.trim()),custom:true};
+    const u=[...customPRGroups,g];setCustomPRGroups(u);LS.set("grind_custom_pr_groups",u);
+  }
+  function removeCustomPRGroup(id){
+    const u=customPRGroups.filter(g=>g.id!==id);setCustomPRGroups(u);LS.set("grind_custom_pr_groups",u);
+  }
+
 
   function getSuggestedWeight(exName){
     let pr=prs[exName];
@@ -566,13 +768,29 @@ export default function App() {
     const workout=customWorkout||getWorkout(dayId);
     const sets={};
     workout.sections.forEach(sec=>sec.exercises.forEach(ex=>{
-      sets[ex.id||ex.name]=Array.from({length:ex.sets},()=>({weight:"",reps:"",done:false}));
+      if(ex.warmup){
+        // Warmup exercises: single checkbox only
+        sets[ex.id||ex.name]=[{weight:"",reps:"",done:false,warmup:true}];
+      } else {
+        sets[ex.id||ex.name]=Array.from({length:ex.sets},()=>({weight:"",reps:"",done:false}));
+      }
     }));
     const isMob=dayId==="mobility_static";
     const ns={dayId,sets,isCustom:isMob||!!customWorkout,customId:isMob?"__mobility__":customWorkout?.id,mobilitySession:isMob};
     if(isMob)ns._mobilityWorkout=workout;
     sessionStartRef.current=Date.now(); // fresh start
     setSession(ns);setElapsed(0);setActiveDay(dayId);setRestTimer(null);setTab("session");
+  }
+
+  // Detect if an exercise is time-based from its target string
+  function isTimeBased(exKey) {
+    const w = getSessionWorkout();
+    if (!w) return false;
+    let target = "";
+    w.sections.forEach(sec => sec.exercises.forEach(ex => {
+      if ((ex.id || ex.name) === exKey) target = ex.target || "";
+    }));
+    return /sec|min|hold|time/i.test(target);
   }
 
   function logSet(exKey, idx, weight, reps, isEdit){
@@ -587,6 +805,28 @@ export default function App() {
     });
     setSetInput(null);setWt("");setRp("");
     if(!isEdit&&!isLast&&restSecs>0)setRestTimer({remaining:restSecs,total:restSecs,exKey,nextSetIdx:idx+1});
+    // Auto-PR detection — checks group membership, updates best across all variants
+    const numWeight=parseFloat(weight);
+    const numReps=parseInt(reps);
+    if(!isNaN(numWeight)&&numWeight>0&&!isNaN(numReps)&&numReps>0){
+      // Find if this exercise belongs to a PR group
+      const group=getActivePRGroups().find(g=>g.variants?.some(v=>v.toLowerCase()===exKey.toLowerCase()));
+      if(group){
+        // Check if this beats the group best
+        const groupBest=getGroupPR(group);
+        const isNewPR=!groupBest||numWeight>groupBest.weight;
+        if(isNewPR){
+          const est=calc1RM(numWeight,numReps);
+          const entry={weight:numWeight,reps:numReps,estimated1rm:est,date:today(),implement:exKey};
+          // Save under the exact exercise name for granular tracking
+          const updated={...prs,[exKey]:entry};
+          setPrs(updated);LS.set("grind_prs",updated);
+          if(user&&isConfigured&&supabase)supabase.from("user_prs").insert({user_id:user.id,lift_name:exKey,weight:numWeight,reps:numReps,estimated_1rm:est});
+          setNewPR({exKey,weight:numWeight});
+          setTimeout(()=>setNewPR(null),3000);
+        }
+      }
+    }
   }
 
   function skipSet(exKey, idx){
@@ -701,7 +941,8 @@ export default function App() {
 
   function sessionProg(){
     if(!session)return 0;
-    const all=Object.values(session.sets).flat();
+    // Exclude warmup sets from progress calculation
+    const all=Object.values(session.sets).flat().filter(s=>!s.warmup);
     return all.length?Math.round(all.filter(s=>s.done).length/all.length*100):0;
   }
 
@@ -792,6 +1033,31 @@ export default function App() {
     const allDone=exSets.every(s=>s.done);
     const hasNote=!!notes[exKey];
     const sg=getSuggestedWeight(ex.name);
+    const isWarmup=ex.warmup||exSets[0]?.warmup;
+
+    // Warmup exercises render as simple checkbox rows
+    if(isWarmup){
+      return(
+        <div style={{padding:"10px 16px",borderBottom:"1px solid #0f0f0f",display:"flex",alignItems:"center",gap:"12px",background:allDone?"#0c130c":"transparent",opacity:allDone?0.7:1}}>
+          <div onClick={()=>{
+            setSession(prev=>{
+              const u={...prev,sets:{...prev.sets,[exKey]:[{...prev.sets[exKey][0],done:!allDone}]}};
+              LS.set("grind_active_session",{session:u,elapsed,startedAt:sessionStartRef.current});return u;
+            });
+          }}
+            style={{width:"28px",height:"28px",borderRadius:"6px",border:`1.5px solid ${allDone?"#27ae60":"#252525"}`,background:allDone?"#112211":"#111",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+            {allDone&&<span style={{color:"#27ae60",fontSize:"14px",lineHeight:1}}>✓</span>}
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:"13px",fontWeight:700,color:allDone?"#27ae60":"#888"}}>{ex.name}</div>
+            <div style={{fontSize:"10px",color:"#2a2a2a",marginTop:"1px"}}>{ex.sets} × {ex.target}</div>
+            {ex.note&&<div style={{fontSize:"9px",color:"#222",marginTop:"2px",fontStyle:"italic",lineHeight:1.4}}>{ex.note}</div>}
+          </div>
+          <span style={{fontSize:"9px",fontWeight:700,padding:"2px 7px",borderRadius:"4px",background:"#1a1a0a",color:"#4a4a20",letterSpacing:"1px",flexShrink:0}}>WARMUP</span>
+        </div>
+      );
+    }
+
     return(
       <div style={{padding:"13px 16px",borderBottom:"1px solid #0f0f0f",background:allDone?"#0c130c":"transparent"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"8px",marginBottom:"8px"}}>
@@ -841,7 +1107,8 @@ export default function App() {
                 style={{...S.chip(set.done,isCurr||isNext,isEdit),border:isNext&&!set.done?"2px solid #27ae60":S.chip(set.done,isCurr,isEdit).border}}>
                 {set.done?(
                   <>{set.weight?<span style={{fontSize:"9px",fontWeight:800,color:isEdit?"#e05c2a":"#27ae60"}}>{set.weight}</span>:<span style={{fontSize:"13px",color:"#27ae60"}}>✓</span>}
-                  {set.reps&&<span style={{fontSize:"8px",color:isEdit?"#6a3010":"#2a5a2a"}}>{set.reps}</span>}</>
+                  {set.reps&&<span style={{fontSize:"8px",color:isEdit?"#6a3010":"#2a5a2a"}}>{set.reps}</span>}
+                  {newPR?.exKey===exKey&&newPR?.weight===parseFloat(set.weight)&&<span style={{fontSize:"7px",fontWeight:900,color:"#e8a838",letterSpacing:"0.5px"}}>PR!</span>}</>
                 ):isNext?<span style={{fontSize:"9px",fontWeight:800,color:"#27ae60"}}>GO</span>
                 :<span style={{fontSize:"12px",fontWeight:700,color:isCurr?"#e8a838":"#333"}}>{si2+1}</span>}
               </div>
@@ -852,6 +1119,39 @@ export default function App() {
       </div>
     );
   }
+
+  // ── APP STATE GATES ───────────────────────────────────────────────────────
+  if(appState==="loading") return(
+    <div style={{height:"100dvh",background:"#080808",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif"}}>
+      <div style={{fontSize:"48px",fontWeight:900,color:"#1a1a1a",letterSpacing:"-2px"}}>WRK</div>
+    </div>
+  );
+
+  if(appState==="landing") return(
+    <Landing
+      onSignUp={()=>{setAuthInitialMode("signup");setShowAuth(true);setAppState("auth");}}
+      onSignIn={()=>{setAuthInitialMode("login");setShowAuth(true);setAppState("auth");}}
+    />
+  );
+
+  if(appState==="auth") return(
+    <div style={{height:"100dvh",background:"#080808",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif"}}>
+      <AuthModal showAuth={true} authMode={authInitialMode} setAuthMode={setAuthMode}
+        authName={authName} setAuthName={setAuthName} authEmail={authEmail} setAuthEmail={setAuthEmail}
+        authPwd={authPwd} setAuthPwd={setAuthPwd} authErr={authErr} authLoading={authLoading}
+        onAuth={handleAuth}
+        onClose={()=>setAppState("landing")}/>
+    </div>
+  );
+
+  if(appState==="onboarding") return(
+    <Onboarding
+      user={user}
+      existingPRs={prs}
+      onComplete={completeOnboarding}
+      onSkip={()=>setAppState("app")}
+    />
+  );
 
   // ── SESSION SCREEN ────────────────────────────────────────────────────────
   if(tab==="session"&&session){
@@ -865,6 +1165,7 @@ export default function App() {
         <SwapModal swapModal={swapModal} swapTab={swapTab} setSwapTab={setSwapTab} swapSearch={swapSearch} setSwapSearch={setSwapSearch} session={session} onApply={applySwap} onRevert={revertSwap} onClose={()=>setSwapModal(null)}/>
         <AddExModal addExModal={addExModal} onAdd={(ex)=>addExToSession(addExModal?.sectionIdx,ex)} onClose={()=>setAddExModal(null)}/>
         <PREditorModal prEditor={prEditor} prs={prs} phase={phase} onSave={savePR} onClose={()=>setPrEditor(null)}/>
+      {prGroupModal&&<PRGroupModal onAdd={addCustomPRGroup} onClose={()=>setPrGroupModal(false)}/>}
 
         <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",paddingBottom:"24px"}}>
           {/* Header */}
@@ -910,18 +1211,52 @@ export default function App() {
                 <div style={{fontSize:"9px",color:"#27ae60",letterSpacing:"2px",marginBottom:"2px"}}>YOUR NOTE</div>
                 <div style={{fontSize:"12px",color:"#4a8a4a",lineHeight:1.4}}>{notes[setInput.exKey]}</div>
               </div>}
-              {(()=>{const l=getLastLog(setInput.exKey);return(<div style={{fontSize:"10px",color:"#3a3a3a",marginBottom:"10px"}}>{l?`Last: ${l.weight} lbs × ${l.reps} reps`:"No previous log"}</div>);})()}
-              <div style={{display:"flex",gap:"10px",marginBottom:"10px"}}>
-                <div style={{flex:1}}><div style={{fontSize:"9px",color:"#3a3a3a",letterSpacing:"2px",marginBottom:"5px"}}>WEIGHT (lbs)</div><input style={S.inp} type="number" inputMode="decimal" value={wt} onChange={e=>setWt(e.target.value)} placeholder="135" autoFocus/></div>
-                <div style={{flex:1}}><div style={{fontSize:"9px",color:"#3a3a3a",letterSpacing:"2px",marginBottom:"5px"}}>REPS</div><input style={S.inp} type="number" inputMode="numeric" value={rp} onChange={e=>setRp(e.target.value)} placeholder="8"/></div>
-              </div>
-              <div style={{display:"flex",gap:"8px"}}>
-                <button style={{...S.btn(setInput.isEdit?"#e05c2a":"#e8a838",false),flex:2,padding:"12px"}} onClick={()=>logSet(setInput.exKey,setInput.idx,wt||"BW",rp||"—",setInput.isEdit)}>
-                  {setInput.isEdit?"UPDATE ✓":"LOG ✓"}
-                </button>
-                {!setInput.isEdit&&<button style={{...S.btn("#333",true),flex:1,padding:"12px"}} onClick={()=>skipSet(setInput.exKey,setInput.idx)}>SKIP</button>}
-                <button style={{...S.btn("#333",true),flex:1,padding:"12px"}} onClick={()=>{setSetInput(null);setWt("");setRp("");}}>✕</button>
-              </div>
+              {(()=>{
+                const timeBased = isTimeBased(setInput.exKey);
+                // Allow toggle between reps and time
+                const [useTime, setUseTime] = [
+                  setInput.timeMode ?? timeBased,
+                  (v) => setSetInput(prev => ({...prev, timeMode: v}))
+                ];
+                const lastLog = getLastLog(setInput.exKey);
+                return (
+                  <>
+                    {/* Mode toggle */}
+                    <div style={{display:"flex",gap:"6px",marginBottom:"10px"}}>
+                      {["reps","time"].map(m=>(
+                        <button key={m} onClick={()=>setUseTime(m==="time")}
+                          style={{flex:1,padding:"7px",background:(m==="time"?useTime:!useTime)?"#1a1a2a":"#111",border:`1px solid ${(m==="time"?useTime:!useTime)?"#4a9eda":"#1e1e1e"}`,borderRadius:"7px",color:(m==="time"?useTime:!useTime)?"#4a9eda":"#444",fontSize:"10px",fontWeight:700,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:"1px"}}>
+                          {m==="reps"?"REPS":"TIME (sec)"}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{display:"flex",gap:"10px",marginBottom:"10px"}}>
+                      {!useTime && (
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:"9px",color:"#3a3a3a",letterSpacing:"2px",marginBottom:"5px"}}>WEIGHT (lbs)</div>
+                          <input style={S.inp} type="number" inputMode="decimal" value={wt} onChange={e=>setWt(e.target.value)} placeholder="135" autoFocus/>
+                        </div>
+                      )}
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:"9px",color:"#3a3a3a",letterSpacing:"2px",marginBottom:"5px"}}>{useTime?"SECONDS":"REPS"}</div>
+                        <input style={S.inp} type="number" inputMode="numeric" value={rp} onChange={e=>setRp(e.target.value)} placeholder={useTime?"45":"8"} autoFocus={useTime}/>
+                      </div>
+                    </div>
+                    {lastLog&&<div style={{fontSize:"10px",color:"#3a3a3a",marginBottom:"8px"}}>
+                      Last: {lastLog.weight&&lastLog.weight!=="BW"?`${lastLog.weight} lbs × `:""}
+                      {lastLog.reps&&lastLog.reps!=="—"?lastLog.reps:""}{useTime?" sec":""}
+                    </div>}
+                    <div style={{display:"flex",gap:"8px"}}>
+                      <button style={{...S.btn(setInput.isEdit?"#e05c2a":"#e8a838",false),flex:2,padding:"12px"}}
+                        onClick={()=>logSet(setInput.exKey,setInput.idx,useTime?"BW":wt||"BW",rp||"—",setInput.isEdit)}>
+                        {setInput.isEdit?"UPDATE ✓":"LOG ✓"}
+                      </button>
+                      {!setInput.isEdit&&<button style={{...S.btn("#333",true),flex:1,padding:"12px"}} onClick={()=>skipSet(setInput.exKey,setInput.idx)}>SKIP</button>}
+                      <button style={{...S.btn("#333",true),flex:1,padding:"12px"}} onClick={()=>{setSetInput(null);setWt("");setRp("");}}>✕</button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           );})()}
 
@@ -1144,27 +1479,114 @@ export default function App() {
                 </div>
               </div>
               <div style={{padding:"14px 16px 0"}}>
-                <div style={{fontSize:"9px",color:"#2a2a2a",letterSpacing:"3px",marginBottom:"8px"}}>PHASE</div>
+                <div style={{fontSize:"9px",color:"#2a2a2a",letterSpacing:"3px",marginBottom:"8px"}}>PROGRAM PROGRESS</div>
+                {/* Auto week/phase display */}
                 <div style={{display:"flex",gap:"8px",marginBottom:"8px"}}>
-                  {[1,2,3].map(p=>(
-                    <button key={p} onClick={()=>setPhase(p)} style={{flex:1,padding:"11px 8px",background:phase===p?PHASE_COLORS[p]:"#111",border:`1px solid ${phase===p?PHASE_COLORS[p]:"#1e1e1e"}`,borderRadius:"10px",cursor:"pointer",color:phase===p?"#000":"#3a3a3a",fontFamily:"'Barlow Condensed',sans-serif"}}>
-                      <div style={{fontSize:"8px",fontWeight:700,letterSpacing:"1px"}}>PHASE</div>
-                      <div style={{fontSize:"22px",fontWeight:900}}>{p}</div>
-                      <div style={{fontSize:"9px",marginTop:"1px"}}>{PHASE_INFO[p].weeks}</div>
+                  <div style={{flex:1,padding:"14px",background:"#111",border:`1px solid ${PHASE_COLORS[phase]}30`,borderRadius:"10px",textAlign:"center"}}>
+                    <div style={{fontSize:"9px",color:"#333",letterSpacing:"2px",marginBottom:"2px"}}>WEEK</div>
+                    <div style={{fontSize:"32px",fontWeight:900,color:PHASE_COLORS[phase],lineHeight:1}}>{week}</div>
+                    <div style={{fontSize:"9px",color:"#2a2a2a",marginTop:"2px"}}>of 12</div>
+                  </div>
+                  <div style={{flex:1,padding:"14px",background:"#111",border:`1px solid ${PHASE_COLORS[phase]}30`,borderRadius:"10px",textAlign:"center"}}>
+                    <div style={{fontSize:"9px",color:"#333",letterSpacing:"2px",marginBottom:"2px"}}>PHASE</div>
+                    <div style={{fontSize:"32px",fontWeight:900,color:PHASE_COLORS[phase],lineHeight:1}}>{phase}</div>
+                    <div style={{fontSize:"9px",color:"#2a2a2a",marginTop:"2px"}}>{PHASE_INFO[phase].weeks}</div>
+                  </div>
+                  <div style={{flex:2,padding:"14px",background:"#111",border:`1px solid ${PHASE_COLORS[phase]}30`,borderRadius:"10px"}}>
+                    <div style={{fontSize:"9px",color:"#333",letterSpacing:"2px",marginBottom:"3px"}}>INTENSITY</div>
+                    <div style={{fontSize:"13px",fontWeight:700,color:PHASE_COLORS[phase],lineHeight:1.2}}>{PHASE_INFO[phase].name}</div>
+                    <div style={{fontSize:"9px",color:"#2a2a2a",marginTop:"3px",lineHeight:1.4}}>{PHASE_PCT[phase].map(p=>Math.round(p*100)).join('–')}% 1RM</div>
+                    <div style={{fontSize:"8px",color:"#1a1a1a",marginTop:"2px"}}>Tempo: {TEMPO[phase]}</div>
+                  </div>
+                </div>
+                {/* Progress bar */}
+                <div style={{padding:"10px 14px",background:"#111",border:"1px solid #1e1e1e",borderRadius:"10px",marginBottom:"6px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:"6px"}}>
+                    <span style={{fontSize:"9px",color:"#333",letterSpacing:"1px"}}>12-WEEK PROGRESS</span>
+                    <span style={{fontSize:"9px",color:"#333"}}>{Math.round((week-1)/12*100)}%</span>
+                  </div>
+                  <div style={{height:"4px",background:"#1a1a1a",borderRadius:"2px",overflow:"hidden"}}>
+                    <div style={{height:"4px",background:PHASE_COLORS[phase],width:`${Math.round((week-1)/12*100)}%`,borderRadius:"2px",transition:"width 0.4s"}}/>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",marginTop:"5px"}}>
+                    {[1,3,7].map((startWk,i)=>(
+                      <span key={i} style={{fontSize:"8px",color:week>=startWk?"#3a3a3a":"#1e1e1e"}}>
+                        {["Ph1","Ph2","Ph3"][i]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {/* Manual override — only show if no start date set */}
+                {!planStartDate&&(
+                  <div style={{display:"flex",gap:"8px"}}>
+                    <button onClick={()=>{
+                      const sd=today();
+                      setPlanStartDate(sd);
+                      const w=calcWeekFromStart(sd);
+                      const p=calcPhaseFromWeek(w);
+                      setWeek(w);setPhase(p);
+                      LS.set("grind_settings",{planStartDate:sd,phase:p,week:w});
+                    }} style={{flex:2,padding:"10px",background:"#1a1200",border:"1px solid #e8a83830",borderRadius:"8px",color:"#e8a838",fontSize:"12px",fontWeight:700,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:"1px"}}>
+                      START TODAY →
                     </button>
-                  ))}
-                </div>
-                <div style={{display:"flex",alignItems:"center",gap:"12px",padding:"11px 14px",background:"#111",border:"1px solid #1e1e1e",borderRadius:"10px",marginBottom:"8px"}}>
-                  <div style={{flex:1,fontSize:"10px",color:"#444",letterSpacing:"2px"}}>WEEK</div>
-                  <button onClick={()=>setWeek(w=>Math.max(1,w-1))} style={{width:"34px",height:"34px",background:"#1a1a1a",border:"1px solid #252525",borderRadius:"7px",color:"#ccc",fontSize:"20px",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",lineHeight:1}}>−</button>
-                  <div style={{fontSize:"26px",fontWeight:900,minWidth:"28px",textAlign:"center"}}>{week}</div>
-                  <button onClick={()=>setWeek(w=>Math.min(12,w+1))} style={{width:"34px",height:"34px",background:"#1a1a1a",border:"1px solid #252525",borderRadius:"7px",color:"#ccc",fontSize:"20px",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",lineHeight:1}}>+</button>
-                </div>
-                <div style={{padding:"11px 14px",background:"#111",border:`1px solid ${PHASE_COLORS[phase]}20`,borderLeft:`3px solid ${PHASE_COLORS[phase]}`,borderRadius:"0 8px 8px 0"}}>
-                  <div style={{fontSize:"11px",color:PHASE_COLORS[phase],fontWeight:700,letterSpacing:"1px",marginBottom:"3px"}}>{PHASE_INFO[phase].name.toUpperCase()}</div>
-                  <div style={{fontSize:"10px",color:"#333",lineHeight:1.5}}>{PHASE_INFO[phase].desc}</div>
-                  <div style={{fontSize:"9px",color:"#252525",marginTop:"5px"}}>Tempo: {TEMPO[phase]}</div>
-                </div>
+                    <button onClick={()=>setShowDatePicker(true)}
+                      style={{flex:1,padding:"10px",background:"#111",border:"1px solid #252525",borderRadius:"8px",color:"#555",fontSize:"11px",fontWeight:700,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif"}}>
+                      SET DATE
+                    </button>
+                  </div>
+                )}
+                {planStartDate&&(
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0"}}>
+                    <span style={{fontSize:"9px",color:"#1e1e1e"}}>Started {planStartDate}</span>
+                    <button onClick={()=>setShowDatePicker(true)}
+                      style={{background:"none",border:"none",color:"#444",fontSize:"10px",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:"0.5px"}}>
+                      CHANGE DATE
+                    </button>
+                  </div>
+                )}
+                {/* Date picker modal */}
+                {showDatePicker&&(
+                  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+                    <div style={{width:"100%",maxWidth:"430px",background:"#111",borderRadius:"16px 16px 0 0",padding:"20px 20px calc(env(safe-area-inset-bottom,0px) + 24px)"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+                        <div>
+                          <div style={{fontSize:"18px",fontWeight:900}}>SET START DATE</div>
+                          <div style={{fontSize:"12px",color:"#444",marginTop:"3px"}}>When did you begin your 12-week program?</div>
+                        </div>
+                        <button onClick={()=>setShowDatePicker(false)} style={{background:"none",border:"none",color:"#444",fontSize:"22px",cursor:"pointer"}}>✕</button>
+                      </div>
+                      <input type="date" id="startDateInput" defaultValue={planStartDate||today()}
+                        style={{width:"100%",padding:"14px",background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:"10px",color:"#f0f0f0",fontSize:"16px",outline:"none",fontFamily:"'Barlow Condensed',sans-serif",marginBottom:"14px"}}/>
+                      <div style={{padding:"10px 14px",background:"#0e1200",border:"1px solid #1a2a00",borderRadius:"8px",marginBottom:"14px",fontSize:"11px",color:"#6a8a20",lineHeight:1.5}}>
+                        The app will calculate your current week and phase automatically from this date.
+                      </div>
+                      <button onClick={()=>{
+                        const input=document.getElementById("startDateInput");
+                        const sd=input?.value||today();
+                        setPlanStartDate(sd);
+                        const w=calcWeekFromStart(sd);
+                        const p=calcPhaseFromWeek(w);
+                        setWeek(w);setPhase(p);
+                        LS.set("grind_settings",{planStartDate:sd,phase:p,week:w});
+                        setShowDatePicker(false);
+                      }} style={{width:"100%",padding:"14px",background:"#e8a838",border:"none",borderRadius:"10px",color:"#000",fontSize:"15px",fontWeight:900,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:"1px"}}>
+                        CONFIRM →
+                      </button>
+                      <button onClick={()=>{
+                        if(!window.confirm("Reset start date to today?"))return;
+                        const sd=today();
+                        setPlanStartDate(sd);
+                        const w=calcWeekFromStart(sd);
+                        const p=calcPhaseFromWeek(w);
+                        setWeek(w);setPhase(p);
+                        LS.set("grind_settings",{planStartDate:sd,phase:p,week:w});
+                        setShowDatePicker(false);
+                      }} style={{width:"100%",marginTop:"8px",padding:"11px",background:"transparent",border:"1px solid #252525",borderRadius:"10px",color:"#444",fontSize:"13px",fontWeight:700,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif"}}>
+                        USE TODAY AS START DATE
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div style={{padding:"14px 16px 0"}}>
                 <div style={{fontSize:"9px",color:"#2a2a2a",letterSpacing:"3px",marginBottom:"8px"}}>WEEK SCHEDULE</div>
@@ -1369,33 +1791,88 @@ export default function App() {
 
             {/* PRs */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"20px",marginBottom:"10px"}}>
-              <div style={{fontSize:"9px",color:"#2a2a2a",letterSpacing:"3px"}}>YOUR PRs</div>
-              <div style={{fontSize:"9px",color:"#2a2a2a"}}>Phase {phase} targets</div>
+              <div style={{fontSize:"9px",color:"#2a2a2a",letterSpacing:"3px"}}>PERSONAL RECORDS</div>
+              <button onClick={()=>setPrGroupModal(true)} style={{padding:"7px 12px",background:"#1a1a1a",border:"1px solid #252525",borderRadius:"7px",color:"#555",fontSize:"10px",fontWeight:800,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif"}}>+ ADD LIFT</button>
             </div>
-            {PR_LIFTS.map(lift=>{
-              const pr=prs[lift];const [lo,hi]=PHASE_PCT[phase];
+            <div style={{fontSize:"9px",color:"#1a1a1a",marginBottom:"10px"}}>Tracks your best across all implements — barbell, dumbbell, trap bar. Phase {phase} targets shown.</div>
+            {getActivePRGroups().map(group=>{
+              const pr=getGroupPR(group);
+              const [lo,hi]=PHASE_PCT[phase];
               return(
-                <div key={lift} style={{...S.card,marginBottom:"6px"}}>
-                  <div style={{padding:"12px 16px",display:"flex",alignItems:"center",gap:"10px"}}>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:"13px",fontWeight:700,color:"#bbb"}}>{lift}</div>
-                      {pr?(
-                        <div style={{marginTop:"3px"}}>
-                          <div style={{fontSize:"10px",color:"#3a3a3a"}}>{pr.weight} lbs × {pr.reps} reps → <span style={{color:"#e8a838",fontWeight:700}}>{pr.estimated1rm} lb 1RM</span></div>
-                          <div style={{fontSize:"10px",color:"#2a4a10",marginTop:"1px"}}>Ph{phase}: {calcWt(pr.estimated1rm,lo*100)}–{calcWt(pr.estimated1rm,hi*100)} lbs ({Math.round(lo*100)}–{Math.round(hi*100)}%)</div>
-                        </div>
-                      ):(
-                        <div style={{fontSize:"10px",color:"#2a2a2a",marginTop:"2px"}}>No PR logged yet</div>
-                      )}
+                <div key={group.id} style={{...S.card,marginBottom:"8px"}}>
+                  <div style={{padding:"12px 16px"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:pr?"8px":"0"}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"14px",fontWeight:800,color:"#ccc"}}>{group.label}</div>
+                        {pr?(
+                          <div style={{marginTop:"3px"}}>
+                            <div style={{fontSize:"10px",color:"#3a3a3a"}}>{pr.implement&&pr.implement!==group.label?<span style={{color:"#555"}}>{pr.implement} · </span>:null}{pr.weight} lbs × {pr.reps} reps → <span style={{color:"#e8a838",fontWeight:700}}>{pr.estimated1rm} lb 1RM</span></div>
+                            <div style={{fontSize:"10px",color:"#2a4a10",marginTop:"1px"}}>Ph{phase}: {calcWt(pr.estimated1rm,lo*100)}–{calcWt(pr.estimated1rm,hi*100)} lbs ({Math.round(lo*100)}–{Math.round(hi*100)}%)</div>
+                          </div>
+                        ):(
+                          <div style={{fontSize:"10px",color:"#2a2a2a",marginTop:"2px"}}>No PR logged — will auto-track from sessions</div>
+                        )}
+                      </div>
+                      <div style={{display:"flex",gap:"6px",flexShrink:0}}>
+                        <button onClick={()=>setPrEditor(pr?.implement||group.variants?.[0]||group.label)}
+                          style={{padding:"8px 12px",background:pr?"#0e1200":"#1a1a1a",border:`1px solid ${pr?"#1a2a00":"#252525"}`,borderRadius:"8px",color:pr?"#6a8a20":"#555",fontSize:"11px",fontWeight:800,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif"}}>
+                          {pr?"UPDATE":"LOG PR"}
+                        </button>
+                        <button onClick={()=>group.custom?removeCustomPRGroup(group.id):removeDefaultPRGroup(group.id)}
+                          style={{padding:"8px 10px",background:"#1a0a0a",border:"1px solid #c0392b20",borderRadius:"8px",color:"#c0392b",fontSize:"12px",cursor:"pointer"}}>
+                          ✕
+                        </button>
+                      </div>
                     </div>
-                    <button onClick={()=>setPrEditor(lift)}
-                      style={{padding:"8px 12px",background:pr?"#0e1200":"#1a1a1a",border:`1px solid ${pr?"#1a2a00":"#252525"}`,borderRadius:"8px",color:pr?"#6a8a20":"#555",fontSize:"11px",fontWeight:800,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",flexShrink:0}}>
-                      {pr?"UPDATE":"LOG PR"}
-                    </button>
+                    {/* Variant breakdown */}
+                    {pr&&group.variants&&(
+                      <div style={{display:"flex",gap:"5px",flexWrap:"wrap",marginTop:"6px"}}>
+                        {group.variants.filter(v=>prs[v]).map(v=>(
+                          <span key={v} onClick={()=>setPrEditor(v)}
+                            style={{...S.tag(prs[v]?.weight>=pr.weight?"#0e1200":"#1a1a1a",prs[v]?.weight>=pr.weight?"#6a8a20":"#3a3a3a"),cursor:"pointer",padding:"4px 8px"}}>
+                            {v.replace("Barbell","BB").replace("Dumbbell","DB").replace("Trap Bar","TB")} {prs[v]?.weight}lbs
+                          </span>
+                        ))}
+                        {/* Add a variant */}
+                        {group.variants?.filter(v=>!prs[v]).slice(0,2).map(v=>(
+                          <span key={v} onClick={()=>setPrEditor(v)}
+                            style={{...S.tag("#111","#2a2a2a"),cursor:"pointer",padding:"4px 8px",border:"1px dashed #2a2a2a"}}>
+                            + {v.replace("Barbell","BB").replace("Dumbbell","DB").replace("Trap Bar","TB")}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
+            {/* Removed defaults — show restore option */}
+            {removedPRGroups.length>0&&(
+              <div style={{marginTop:"10px"}}>
+                <div style={{fontSize:"9px",color:"#1a1a1a",letterSpacing:"2px",marginBottom:"6px"}}>REMOVED</div>
+                {PR_GROUPS.filter(g=>removedPRGroups.includes(g.id)).map(g=>(
+                  <div key={g.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#0a0a0a",borderRadius:"8px",marginBottom:"5px"}}>
+                    <span style={{fontSize:"12px",color:"#2a2a2a"}}>{g.label}</span>
+                    <button onClick={()=>restoreDefaultPRGroup(g.id)} style={{background:"none",border:"none",color:"#27ae60",fontSize:"11px",fontWeight:700,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif"}}>RESTORE</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── SEARCH ── */}
+        {tab==="search"&&(
+          <div style={{height:"100%",display:"flex",flexDirection:"column"}}>
+            <div style={{padding:"14px 16px 0",flexShrink:0}}>
+              <div style={{fontSize:"9px",color:"#2a2a2a",letterSpacing:"3px",marginBottom:"10px"}}>EXERCISE SEARCH</div>
+            </div>
+            <div style={{flex:1,overflow:"hidden"}}>
+              <Search
+                userEquipment={userProfile?.equipment||[]}
+                onAddToWorkout={null}
+              />
+            </div>
           </div>
         )}
 
@@ -1464,15 +1941,15 @@ export default function App() {
 
       <div style={S.nav}>
         {[
-          {id:"today",icon:"◎",label:"TODAY"},
-          {id:"day",  icon:"≡",label:"WORKOUT"},
-          {id:"build",icon:"⊕",label:"BUILD"},
-          {id:"history",icon:"⊞",label:"LOG"},
+          {id:"today",   icon:"◎",label:"TODAY"},
+          {id:"day",     icon:"≡",label:"WORKOUT"},
+          {id:"search",  icon:"⊘",label:"SEARCH"},
+          {id:"build",   icon:"⊕",label:"BUILD"},
           {id:"progress",icon:"↑",label:"GAINS"},
         ].map(t=>(
           <button key={t.id} style={S.navBtn(tab===t.id)} onClick={()=>{if(t.id==="day")setActiveDay(todayId);setTab(t.id);}}>
-            <span style={{fontSize:"16px",lineHeight:1}}>{t.icon}</span>
-            <span style={{fontSize:"7px",fontWeight:800,letterSpacing:"1px"}}>{t.label}</span>
+            <span style={{fontSize:"14px",lineHeight:1}}>{t.icon}</span>
+            <span style={{fontSize:"7px",fontWeight:800,letterSpacing:"0.5px"}}>{t.label}</span>
           </button>
         ))}
       </div>
