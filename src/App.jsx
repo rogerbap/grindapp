@@ -360,7 +360,7 @@ function AuthModal({ showAuth, authMode, setAuthMode, authName, setAuthName, aut
   );
 }
 
-function ProfileModal({ showProfile, user, syncing, migratePrompt, onSync, onMigrate, onSignOut, onClose }) {
+function ProfileModal({ showProfile, user, syncing, migratePrompt, onSync, onMigrate, onReset, onSignOut, onClose }) {
   if (!showProfile) return null;
   return (
     <div style={{...S.overlay, zIndex:200}}>
@@ -381,6 +381,7 @@ function ProfileModal({ showProfile, user, syncing, migratePrompt, onSync, onMig
         </div>}
         {syncing&&<div style={{fontSize:"10px",color:"#e8a838",marginBottom:"10px",letterSpacing:"1px"}}>SYNCING...</div>}
         <button onClick={onSync} style={{...S.btn("#1a2a3a",true),padding:"11px",fontSize:"12px",color:"#4a9eda",border:"1px solid #1a3a5a",marginBottom:"8px"}}>SYNC TO CLOUD</button>
+        <button onClick={onReset} style={{padding:"11px",width:"100%",background:"transparent",border:"1px solid #b8872a40",borderRadius:"10px",color:"#b8872a",fontSize:"12px",fontWeight:800,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",marginBottom:"8px",letterSpacing:"0.5px"}}>RESET TO DEFAULT PLAN</button>
         <button onClick={onSignOut} style={{...S.btn("#c0392b",true),padding:"11px",fontSize:"12px"}}>SIGN OUT</button>
       </div>
     </div>
@@ -655,6 +656,24 @@ export default function App() {
     }
 
     setAppState("app");
+  }
+
+  async function resetToDefaultPlan(){
+    if(!window.confirm("This will clear your custom plan and restore the default WRK program. Your workout history and PRs are kept. Continue?"))return;
+    // Clear preset overrides locally
+    setPresetOverrides({});
+    LS.set("grind_preset_overrides",{});
+    // Clear from Supabase
+    if(user&&isConfigured&&supabase){
+      try{
+        await supabase.from("user_data").upsert({
+          id:user.id,
+          preset_overrides:{},
+          updated_at:new Date().toISOString()
+        });
+      }catch(e){console.error(e);}
+    }
+    alert("Plan reset. Your default WRK program is now active.");
   }
 
   async function syncCloud(){
@@ -1419,7 +1438,7 @@ export default function App() {
   return(
     <div style={S.app}>
       <AuthModal showAuth={showAuth} authMode={authMode} setAuthMode={setAuthMode} authName={authName} setAuthName={setAuthName} authEmail={authEmail} setAuthEmail={setAuthEmail} authPwd={authPwd} setAuthPwd={setAuthPwd} authErr={authErr} authLoading={authLoading} onAuth={handleAuth} onClose={()=>setShowAuth(false)}/>
-      <ProfileModal showProfile={showProfile} user={user} syncing={syncing} migratePrompt={migratePrompt} onSync={syncCloud} onMigrate={async()=>{setSyncing(true);await syncCloud();setMigratePrompt(false);setSyncing(false);}} onSignOut={handleSignOut} onClose={()=>setShowProfile(false)}/>
+      <ProfileModal showProfile={showProfile} user={user} syncing={syncing} migratePrompt={migratePrompt} onSync={syncCloud} onMigrate={async()=>{setSyncing(true);await syncCloud();setMigratePrompt(false);setSyncing(false);}} onReset={resetToDefaultPlan} onSignOut={handleSignOut} onClose={()=>setShowProfile(false)}/>
       <NoteEditorModal noteEditor={noteEditor} noteVal={noteVal} setNoteVal={setNoteVal} onSave={(v)=>saveNote(noteEditor.exName,v)} onClear={()=>saveNote(noteEditor.exName,"")} onClose={()=>setNoteEditor(null)}/>
       <SwapModal swapModal={swapModal} swapTab={swapTab} setSwapTab={setSwapTab} swapSearch={swapSearch} setSwapSearch={setSwapSearch} session={session} onApply={applySwap} onRevert={revertSwap} onClose={()=>setSwapModal(null)}/>
       <PREditorModal prEditor={prEditor} prs={prs} phase={phase} onSave={savePR} onClose={()=>setPrEditor(null)}/>
