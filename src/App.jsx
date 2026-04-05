@@ -576,9 +576,15 @@ export default function App() {
         if(ud.history?.length)setHistory(ud.history);
         if(ud.notes)setNotes(ud.notes);
         if(ud.custom_workouts?.length)setCustomWorkouts(ud.custom_workouts);
-        if(ud.preset_overrides&&Object.keys(ud.preset_overrides).length){
+        // Only apply cloud overrides if non-empty AND local isn't already cleared
+        const localOverrides=LS.get("grind_preset_overrides")||{};
+        if(ud.preset_overrides&&Object.keys(ud.preset_overrides).length>0){
           setPresetOverrides(ud.preset_overrides);
           LS.set("grind_preset_overrides",ud.preset_overrides);
+        } else {
+          // Cloud has empty overrides — respect that, clear local too
+          setPresetOverrides({});
+          LS.set("grind_preset_overrides",{});
         }
         if(ud.settings){
       if(ud.settings.planStartDate){
@@ -660,20 +666,23 @@ export default function App() {
 
   async function resetToDefaultPlan(){
     if(!window.confirm("This will clear your custom plan and restore the default WRK program. Your workout history and PRs are kept. Continue?"))return;
-    // Clear preset overrides locally
+    // Clear locally first
     setPresetOverrides({});
     LS.set("grind_preset_overrides",{});
-    // Clear from Supabase
+    LS.del("grind_onboarding_complete");
+    // Force clear from Supabase with explicit empty object
     if(user&&isConfigured&&supabase){
       try{
-        await supabase.from("user_data").upsert({
-          id:user.id,
+        await supabase.from("user_data").update({
           preset_overrides:{},
           updated_at:new Date().toISOString()
-        });
-      }catch(e){console.error(e);}
+        }).eq("id",user.id);
+        console.log("Cloud overrides cleared");
+      }catch(e){console.error("Reset error",e);}
     }
-    alert("Plan reset. Your default WRK program is now active.");
+    setShowProfile(false);
+    // Force page reload so app re-reads WORKOUTS fresh
+    window.location.reload();
   }
 
   async function syncCloud(){
